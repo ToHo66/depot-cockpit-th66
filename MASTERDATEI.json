@@ -1,0 +1,34 @@
+{
+  "version": "2.2.0-master",
+  "referenceDate": "2026-07-14",
+  "sBrokerReferenceValueEUR": 167818.83,
+  "rules": {
+    "primaryDevice": "iPhone",
+    "brokersSeparated": true,
+    "preferredMarketVenues": ["Tradegate", "gettex", "Lang & Schwarz", "Xetra", "Stuttgart", "Frankfurt"],
+    "fallbackForeignVenues": ["Euronext", "Nasdaq", "NYSE"],
+    "manualVenueSelectionPerPosition": true,
+    "manualBrokerPriceAllowed": true,
+    "noInventedData": true
+  },
+  "activeSBrokerPositions": [
+    {"name":"Vanguard FTSE All-World","isin":"IE00BK5BQT80","wkn":"A2PKXG","quantity":327,"averagePurchasePriceEUR":157.422,"referenceValueEUR":54321.24},
+    {"name":"Future of Defence","isin":"IE000OJ5TQP4","wkn":"A3EB9T","quantity":1518,"averagePurchasePriceEUR":14.75,"referenceValueEUR":27324.00},
+    {"name":"Amundi STOXX Europe 600 Banks","isin":"LU1834983477","wkn":"LYX01W","quantity":310,"averagePurchasePriceEUR":45.115,"referenceValueEUR":21994.50},
+    {"name":"iShares Essential Metals Producers","isin":"IE000ROSD5J6","wkn":"A3ERLP","quantity":1850,"averagePurchasePriceEUR":7.093,"referenceValueEUR":15327.25},
+    {"name":"iShares MSCI World Information Technology","isin":"IE00BJ5JNY98","wkn":"A2PHCC","quantity":780,"averagePurchasePriceEUR":15.891,"referenceValueEUR":13880.88},
+    {"name":"VanEck Semiconductor","isin":"IE00BMC38736","wkn":"A2QC5J","quantity":98,"averagePurchasePriceEUR":89.377,"referenceValueEUR":9681.42},
+    {"name":"SAP SE","isin":"DE0007164600","wkn":"716460","quantity":60,"averagePurchasePriceEUR":250.417,"referenceValueEUR":8139.60},
+    {"name":"Fidelity Global Quality Income","isin":"IE00BYXVGZ48","wkn":"A2DL7E","quantity":580,"averagePurchasePriceEUR":9.855,"referenceValueEUR":5855.68},
+    {"name":"L&G Cyber Security","isin":"IE00BYPLS672","wkn":"A14WU5","quantity":141,"averagePurchasePriceEUR":33.329,"referenceValueEUR":5726.72},
+    {"name":"Xetra-Gold","isin":"DE000A0S9GB0","wkn":"A0S9GB","quantity":35,"averagePurchasePriceEUR":117.846,"referenceValueEUR":3981.60},
+    {"name":"Global X Data Center REITs & Digital Infrastructure","isin":"IE00BMH5Y327","wkn":"A2QPB0","quantity":65,"averagePurchasePriceEUR":24.302,"referenceValueEUR":1471.28}
+  ],
+  "activeTradeRepublicPositions": [
+    {"name":"Trilogy Metals","isin":"CA89621C1059","quantity":600,"averagePurchasePriceEUR":null}
+  ],
+  "reconciliationNotes": [
+    "The 11 sBroker positions sum exactly to the screenshot total of EUR 167,818.83.",
+    "Xtrackers MSCI World Value was listed in an older project brief but is not visible in the current sBroker screenshots and is therefore not active in this master basis until reconfirmed."
+  ]
+}

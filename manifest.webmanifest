@@ -1,9 +1,1 @@
-{
-  "name": "Depot-Cockpit TH66 Professional",
-  "short_name": "Depot-Cockpit",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#f2f5fa",
-  "theme_color": "#0c1730",
-  "icons": []
-}
+{"name":"Depot-Cockpit TH66 Professional","short_name":"Depot TH66","start_url":"/","display":"standalone","background_color":"#f1f5fa","theme_color":"#0c1730","lang":"de"}

@@ -1,27 +1,20 @@
-# Depot-Cockpit TH66 Professional 2.0.0
+# Depot-Cockpit Professional 2.2 Master
 
-Neustart mit einer klaren, prüfbaren Datenarchitektur.
+Diese Version basiert auf der zuletzt aus GitHub geladenen Vercel-Struktur und den sBroker-Screenshots vom 14.07.2026.
 
-## Grundprinzip
+## Enthalten
+- sBroker und Trade Republic getrennt
+- verbindliche Stückzahlen und Einstandskurse aus der Masterdatei
+- manuell wählbarer bevorzugter Handelsplatz und alternative Handelsplätze je Position
+- manueller Brokerkurs für die aktuelle Bewertung
+- Käufe, Teilkäufe, Verkäufe und Teilverkäufe erfassen
+- vollständige Verkäufe automatisch archivieren
+- Transaktionshistorie mit Gebühren und realisiertem Ergebnis
+- Export und Import der lokalen Depotdaten
+- EODHD-Marktdaten über die bestehende Vercel-Variable `EODHD_API_KEY`
 
-- Marktrenditen (Tag/Woche/Monat/Chart) werden ausschließlich aus derselben EODHD-EOD-Kursreihe berechnet.
-- Manuelle sBroker-Kurse dienen ausschließlich der aktuellen Depotbewertung.
-- Brokerkurs und historische Marktrendite werden niemals rechnerisch vermischt.
-- Bei fehlenden Daten wird eine verständliche Fehlermeldung angezeigt; es werden keine Fantasiewerte erzeugt.
+## Installation
+Der Inhalt dieses Ordners gehört direkt in die oberste Ebene des GitHub-Repositories. Vercel übernimmt danach automatisch die Veröffentlichung.
 
-## Einmalige Einrichtung in Vercel
-
-1. Projekt mit GitHub verbinden oder den entpackten Projektordner deployen.
-2. Project Settings → Environment Variables öffnen.
-3. Variable `EODHD_API_KEY` mit dem EODHD-Schlüssel anlegen.
-4. Danach ein neues Deployment starten.
-5. In der App auf **Aktualisieren** tippen.
-
-## Enthaltene Positionen
-
-11 sBroker-Positionen mit den zuletzt bestätigten Stückzahlen:
-Vanguard 327, Defence 1518, Banks 310, Essential Metals 1850, World IT 780, Semiconductor 98, Cyber 141, Fidelity 580, Data Center 65, SAP 60, Xetra-Gold 35.
-
-## API-Aufwand
-
-Eine vollständige Aktualisierung nutzt grundsätzlich einen historischen EOD-Aufruf pro Position. Bei einem kostenlosen EODHD-Konto ist deshalb nur eine begrenzte Zahl täglicher Aktualisierungen sinnvoll.
+## Datenhinweis
+Die Datei `MASTERDATEI.json` ist die verbindliche Referenz. Xtrackers MSCI World Value ist dort vorläufig nicht als aktiv geführt, weil die aktuelle sBroker-Gesamtsumme exakt aus den elf sichtbaren Positionen besteht.
