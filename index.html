@@ -3,134 +3,133 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0c1730" />
+  <meta name="theme-color" content="#080f1c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="stylesheet" href="/styles.css?v=2.2.0" />
-  <title>Depot-Cockpit TH66 Professional</title>
+  <link rel="stylesheet" href="/styles.css?v=3.0-design1" />
+  <title>Depot-Cockpit Professional</title>
 </head>
 <body>
-<header class="topbar">
-  <div>
-    <div class="eyebrow">MEIN DEPOT · VERSION 2.2.0 MASTER</div>
-    <h1>Depot-Cockpit Professional<span>Depotdaten, Transaktionen und Handelsplätze in einer Masterbasis</span></h1>
+<header class="app-header">
+  <div class="header-row">
+    <div>
+      <div class="eyebrow">DEPOT-COCKPIT · PROFESSIONAL 3.0</div>
+      <h1>Übersicht</h1>
+    </div>
+    <button id="refreshBtn" class="icon-button" aria-label="Marktdaten aktualisieren" title="Marktdaten aktualisieren">↻</button>
   </div>
-  <button id="refreshBtn" class="primary">Aktualisieren</button>
+  <div class="broker-tabs" aria-label="Depotauswahl">
+    <button class="broker-tab active" data-broker-filter="all">Gesamt</button>
+    <button class="broker-tab" data-broker-filter="sBroker">S Broker</button>
+    <button class="broker-tab" data-broker-filter="Trade Republic">Trade Republic</button>
+  </div>
 </header>
+
 <main>
   <div id="setupBanner" class="banner hidden"></div>
 
   <section id="overview" class="page active">
-    <div class="card dark">
-      <span>Gesamtvermögen</span>
+    <article class="hero-card">
+      <div class="hero-topline"><span>Gesamtdepotwert</span><span id="lastUpdate" class="live-label">Noch kein Update</span></div>
       <div id="totalValue" class="hero-value">–</div>
-      <div id="valuationNote" class="light subtle">Noch keine Bewertung</div>
+      <div class="hero-performance"><strong id="dayEuro">–</strong><span id="dayPct">–</span></div>
+      <div id="valuationNote" class="hero-note">Noch keine Bewertung</div>
+      <div class="sparkline" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </article>
+
+    <div class="period-tabs" aria-label="Zeitraum">
+      <button class="active">1T</button><button>1W</button><button>1M</button><button>3M</button><button>1J</button><button>Max</button>
     </div>
-    <div class="grid2">
-      <div class="card metric"><span>sBroker</span><strong id="sbrokerValue">–</strong><small id="sbrokerCount">–</small></div>
-      <div class="card metric"><span>Trade Republic</span><strong id="trValue">–</strong><small id="trCount">–</small></div>
+
+    <div class="metric-grid">
+      <article class="metric-card"><span>Gewinn / Verlust</span><strong id="gainLossValue">–</strong><small id="gainLossPct">Gesamtperformance</small></article>
+      <article class="metric-card"><span>S Broker</span><strong id="sbrokerValue">–</strong><small id="sbrokerCount">–</small></article>
+      <article class="metric-card"><span>Trade Republic</span><strong id="trValue">–</strong><small id="trCount">–</small></article>
+      <article class="metric-card"><span>Datenqualität</span><strong id="coverage">0/0</strong><small>Aktuelle Kursdaten</small></article>
     </div>
-    <div class="grid2">
-      <div class="card metric"><span>Heute</span><strong id="dayPct">–</strong><small id="dayEuro">–</small></div>
-      <div class="card metric"><span>Datenqualität</span><strong id="coverage">0/0</strong><small id="lastUpdate">Noch kein Update</small></div>
-    </div>
-    <div class="card">
-      <h3>Markt heute</h3>
-      <div id="marketToday" class="stack"><p class="muted">Nach der ersten Aktualisierung verfügbar.</p></div>
-    </div>
+
+    <article class="panel">
+      <div class="panel-head"><div><span class="panel-kicker">MARKT</span><h3>Top / Flop heute</h3></div><button class="text-button" data-target-page="analysis">Mehr ›</button></div>
+      <div id="marketToday" class="market-list"><p class="muted">Nach der ersten Aktualisierung verfügbar.</p></div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head"><div><span class="panel-kicker">DEPOT</span><h3>Deine Positionen</h3></div><button class="text-button" data-target-page="positions">Alle anzeigen ›</button></div>
+      <div id="overviewPositions" class="compact-position-list"></div>
+    </article>
   </section>
 
   <section id="positions" class="page">
-    <div class="section-head"><div><h2>Positionen</h2><p>Aktive Bestände nach Broker getrennt</p></div><button id="expandAll" class="secondary">Alle öffnen</button></div>
+    <div class="section-title"><div><span class="panel-kicker">BESTÄNDE</span><h2>Positionen</h2><p>Aktive Werte, Stückzahlen und Kursentwicklung.</p></div><button id="expandAll" class="small-button">Alle öffnen</button></div>
+    <div class="filter-chips"><button class="active">Alle</button><button>Aktien</button><button>ETFs</button><button>Rohstoffe</button></div>
     <div id="positionList"></div>
   </section>
 
-  <section id="analysis" class="page">
-    <div class="section-head"><div><h2>Analyse</h2><p>Nachvollziehbare Markt- und Datenprüfung</p></div></div>
-    <div class="card"><h3>Depotbeiträge heute</h3><div id="contributors"></div></div>
-    <div class="card"><h3>Datenprüfung</h3><div id="diagnostics"></div></div>
-  </section>
-
-  <section id="manage" class="page">
-    <div class="section-head"><div><h2>Verwalten</h2><p>Stammdaten, Brokerkurse und Archiv</p></div></div>
-
-    <div class="card form-card">
-      <h3>Broker-Gesamtwerte</h3>
-      <label>sBroker Gesamtwert (€)<input id="sbrokerReference" inputmode="decimal"></label>
-      <label>Trade Republic Gesamtwert (€)<input id="trReference" inputmode="decimal"></label>
-      <button id="saveReferences" class="primary dark-button wide">Speichern</button>
-    </div>
-
-    <div class="card form-card">
-      <h3>Position hinzufügen</h3>
+  <section id="transaction" class="page">
+    <div class="section-title"><div><span class="panel-kicker">BUCHUNG</span><h2>Neue Transaktion</h2><p>Kauf, Nachkauf, Teilverkauf oder vollständiger Verkauf.</p></div></div>
+    <article class="panel form-card transaction-card">
+      <div class="transaction-type"><button class="active" data-tx="BUY">Kauf</button><button data-tx="SELL">Verkauf</button></div>
       <div class="form-grid">
-        <label>Name<input id="newName"></label>
-        <label>ISIN<input id="newIsin" autocapitalize="characters"></label><label>WKN<input id="newWkn" autocapitalize="characters"></label>
-        <label>Stückzahl<input id="newQty" inputmode="decimal"></label>
-        <label>Kaufkurs (€)<input id="newPurchasePrice" inputmode="decimal"></label>
-        <label>Broker<select id="newBroker"><option>sBroker</option><option>Trade Republic</option></select></label>
-        <label>Bevorzugter Handelsplatz<select id="newVenue"></select></label><label>Weitere Handelsplätze<input id="newFallbackVenues" placeholder="Tradegate, Xetra, Stuttgart"></label>
-        <label>Datenquelle<select id="newSource"><option value="EODHD">EODHD</option><option value="MANUAL">Nur Brokerkurs</option></select></label>
-        <label>EODHD-Symbol<input id="newSymbol" placeholder="z. B. SAP.XETRA"></label>
-      </div>
-      <button id="addPosition" class="primary dark-button wide">Position hinzufügen</button>
-    </div>
-
-
-    <div class="card form-card">
-      <h3>Kauf oder Verkauf erfassen</h3>
-      <p class="muted">Teilkäufe und Teilverkäufe ändern den Bestand automatisch. Ein vollständiger Verkauf verschiebt die Position ins Archiv.</p>
-      <div class="form-grid">
-        <label>Wertpapier<select id="txPosition"></select></label>
+        <label class="full">Wertpapier<select id="txPosition"></select></label>
         <label>Vorgang<select id="txType"><option value="BUY">Kauf</option><option value="SELL">Verkauf</option></select></label>
         <label>Datum<input id="txDate" type="date"></label>
-        <label>Stückzahl<input id="txQty" inputmode="decimal"></label>
-        <label>Kurs (€)<input id="txPrice" inputmode="decimal"></label>
+        <label>Stückzahl<input id="txQty" inputmode="decimal" placeholder="0,00"></label>
+        <label>Kurs (€)<input id="txPrice" inputmode="decimal" placeholder="0,00"></label>
         <label>Gebühren (€)<input id="txFees" inputmode="decimal" value="0"></label>
         <label>Handelsplatz<select id="txVenue"></select></label>
       </div>
-      <button id="recordTransaction" class="primary dark-button wide">Vorgang speichern</button>
-    </div>
+      <button id="recordTransaction" class="primary-action wide">Transaktion speichern</button>
+    </article>
+    <article class="panel"><div class="panel-head"><h3>Transaktionshistorie</h3></div><div id="transactionList"></div></article>
+  </section>
 
-    <div class="card">
-      <h3>Transaktionshistorie</h3>
-      <div id="transactionList"></div>
-    </div>
+  <section id="analysis" class="page">
+    <div class="section-title"><div><span class="panel-kicker">AUSWERTUNG</span><h2>Analyse</h2><p>Performance, Beiträge und Datenqualität.</p></div></div>
+    <div class="analysis-tabs"><button class="active">Performance</button><button>Allokation</button><button>Risiko</button></div>
+    <article class="panel"><div class="panel-head"><h3>Depotbeiträge heute</h3></div><div id="contributors"></div></article>
+    <article class="panel chart-panel"><div class="panel-head"><h3>Performance</h3><strong id="chartHeadline">–</strong></div><div class="large-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+    <article class="panel"><div class="panel-head"><h3>Datenprüfung</h3></div><div id="diagnostics"></div></article>
+  </section>
 
-    <div class="card">
-      <h3>Positionen bearbeiten</h3>
-      <div id="positionEditors"></div>
-      <button id="savePositionSettings" class="primary dark-button wide">Stammdaten speichern</button>
-    </div>
+  <section id="manage" class="page">
+    <div class="section-title"><div><span class="panel-kicker">VERWALTUNG</span><h2>Einstellungen</h2><p>Depots, Wertpapiere, Handelsplätze und Sicherungen.</p></div></div>
 
-    <div class="card">
-      <h3>Brokerkurse je Position</h3>
-      <p class="muted">Diese Kurse dienen nur der aktuellen Bewertung. Tag, Woche, Monat und Charts bleiben aus der gewählten Marktdatenquelle.</p>
-      <div id="brokerPriceInputs"></div>
-      <button id="saveBrokerPrices" class="primary dark-button wide">Brokerkurse speichern</button>
-    </div>
+    <details class="settings-group" open><summary>Depots verwalten</summary><div class="settings-content">
+      <label>S Broker Gesamtwert (€)<input id="sbrokerReference" inputmode="decimal"></label>
+      <label>Trade Republic Gesamtwert (€)<input id="trReference" inputmode="decimal"></label>
+      <button id="saveReferences" class="primary-action wide">Speichern</button>
+    </div></details>
 
-    <div class="card">
-      <h3>Archiv</h3>
-      <div id="archiveList"></div>
-    </div>
-
-    <div class="card">
-      <h3>Sicherung</h3>
-      <div class="button-row">
-        <button id="exportBtn" class="secondary">JSON exportieren</button>
-        <label class="secondary file-label">JSON importieren<input id="importInput" type="file" accept="application/json"></label>
+    <details class="settings-group"><summary>Wertpapier hinzufügen</summary><div class="settings-content">
+      <div class="form-grid">
+        <label class="full">Name<input id="newName"></label>
+        <label>ISIN<input id="newIsin" autocapitalize="characters"></label><label>WKN<input id="newWkn" autocapitalize="characters"></label>
+        <label>Stückzahl<input id="newQty" inputmode="decimal"></label><label>Kaufkurs (€)<input id="newPurchasePrice" inputmode="decimal"></label>
+        <label>Broker<select id="newBroker"><option>sBroker</option><option>Trade Republic</option></select></label>
+        <label>Handelsplatz<select id="newVenue"></select></label>
+        <label class="full">Vergleichsplätze<input id="newFallbackVenues" placeholder="Tradegate, Xetra, Stuttgart"></label>
+        <label>Datenquelle<select id="newSource"><option value="EODHD">EODHD</option><option value="MANUAL">Nur Brokerkurs</option></select></label>
+        <label>EODHD-Symbol<input id="newSymbol" placeholder="z. B. SAP.XETRA"></label>
       </div>
-      <button id="resetBtn" class="danger wide">Lokale Eingaben zurücksetzen</button>
-    </div>
+      <button id="addPosition" class="primary-action wide">Position hinzufügen</button>
+    </div></details>
+
+    <details class="settings-group"><summary>Wertpapiere bearbeiten</summary><div class="settings-content"><div id="positionEditors"></div><button id="savePositionSettings" class="primary-action wide">Stammdaten speichern</button></div></details>
+    <details class="settings-group"><summary>Brokerkurse</summary><div class="settings-content"><p class="muted">Brokerkurse dienen nur der aktuellen Bewertung. Historische Performance bleibt getrennt.</p><div id="brokerPriceInputs"></div><button id="saveBrokerPrices" class="primary-action wide">Brokerkurse speichern</button></div></details>
+    <details class="settings-group"><summary>Archiv</summary><div class="settings-content"><div id="archiveList"></div></div></details>
+    <details class="settings-group"><summary>Daten & Backup</summary><div class="settings-content"><div class="button-row"><button id="exportBtn" class="secondary-action">JSON exportieren</button><label class="secondary-action file-label">JSON importieren<input id="importInput" type="file" accept="application/json"></label></div><button id="resetBtn" class="danger-action wide">Lokale Eingaben zurücksetzen</button></div></details>
   </section>
 </main>
-<nav class="bottom-nav">
-  <button class="active" data-page="overview">⌂<span>Übersicht</span></button>
-  <button data-page="positions">▦<span>Positionen</span></button>
-  <button data-page="analysis">↗<span>Analyse</span></button>
-  <button data-page="manage">⚙<span>Verwalten</span></button>
+
+<nav class="bottom-nav" aria-label="Hauptnavigation">
+  <button class="active" data-page="overview"><b>⌂</b><span>Übersicht</span></button>
+  <button data-page="positions"><b>▦</b><span>Positionen</span></button>
+  <button class="nav-add" data-page="transaction"><b>＋</b><span>Transaktion</span></button>
+  <button data-page="analysis"><b>▥</b><span>Analyse</span></button>
+  <button data-page="manage"><b>⚙</b><span>Einstellungen</span></button>
 </nav>
 <div id="toast" class="toast"></div>
-<script src="/app.js?v=2.2.0" defer></script>
+<script src="/app.js?v=3.0-design1" defer></script>
 </body>
 </html>
