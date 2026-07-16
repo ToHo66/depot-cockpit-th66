@@ -1,5 +1,5 @@
 {
-  "version": "3.0.2-handelsplatzsteuerung",
+  "version": "3.0.3-berechnungsstabilitaet",
   "referenceDate": "2026-07-14",
   "sBrokerReferenceValueEUR": 167818.83,
   "rules": {

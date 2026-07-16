@@ -1,12 +1,12 @@
-# Depot-Cockpit Professional 3.0.2 – Handelsplatzsteuerung
+# Depot-Cockpit Professional 3.0.3 – Berechnungsstabilität
 
-## Neu
-- Der ausgewählte Handelsplatz steuert jetzt die EODHD-Abfrage, sofern EODHD diesen Platz unterstützt.
-- Unterstützt: Xetra, Frankfurt, Stuttgart, Euronext Paris, Euronext Amsterdam und US.
-- Nicht direkt bei EODHD verfügbar: Tradegate, gettex, Lang & Schwarz und Société Générale. Bei diesen Plätzen greift die definierte Ersatzreihenfolge; die Abweichung wird offen angezeigt.
-- Pro Position können eigene Symbole für Xetra, Frankfurt und Stuttgart gespeichert werden.
-- Die Kursdiagnose zeigt gewünschten Platz, tatsächlich verwendeten Platz, Symbol und alle versuchten Reihen.
-- Ein manueller Brokerkurs hat weiterhin Vorrang für die aktuelle Depotbewertung.
+Diese Unterversion verhindert unrealistische Gewinn-/Verlustanzeigen, solange Kursdaten fehlen oder nur teilweise geladen sind.
 
-## Wichtig
-EODHD-EOD-Daten sind Schlusskurse und keine Broker-Intraday-Kurse. Für einen centgenauen sBroker-Abgleich außerhalb des Börsenschlusses ist der manuelle Brokerkurs vorgesehen.
+## Änderungen
+
+- Gesamtgewinn wird erst berechnet, wenn alle Positionen mit Einstandskurs auch einen Bewertungskurs besitzen.
+- Vor der ersten Kursabfrage erscheinen Striche statt eines künstlichen Verlusts von −153.273,67 €.
+- Marktdaten werden automatisch nach dem Start geladen, sofern EODHD in Vercel konfiguriert ist.
+- Die letzte erfolgreiche Kursabfrage wird für bis zu 24 Stunden lokal zwischengespeichert.
+- Teilweise verfügbare Brokerwerte und Gesamtwerte werden klar als unvollständig behandelt.
+- Version auf 3.0.3 vereinheitlicht.
