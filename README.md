@@ -18,3 +18,12 @@ Der Inhalt dieses Ordners gehört direkt in die oberste Ebene des GitHub-Reposit
 
 ## Datenhinweis
 Die Datei `MASTERDATEI.json` ist die verbindliche Referenz. Xtrackers MSCI World Value ist dort vorläufig nicht als aktiv geführt, weil die aktuelle sBroker-Gesamtsumme exakt aus den elf sichtbaren Positionen besteht.
+
+
+## Version 3.0.1 – Kursarchitektur
+- Einheitliche Versionskennung 3.0.1.
+- Korrekte Tagesbeiträge aus `(EOD-Schlusskurs - Vortagesschluss) × Stückzahl`.
+- Transparente Kursdiagnose je Position.
+- Klare Trennung zwischen manuellem Brokerkurs, Referenz-Handelsplatz und tatsächlichem EODHD-Symbol.
+- Manuelle Depot-Referenzwerte werden als solche und mit Zeitstempel gekennzeichnet.
+- Tageswerte sind ausdrücklich EOD-Werte und keine Intraday-Livekurse.

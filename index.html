@@ -7,14 +7,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="stylesheet" href="/styles.css?v=3.0-design1" />
+  <link rel="stylesheet" href="/styles.css?v=3.0.1" />
   <title>Depot-Cockpit Professional</title>
 </head>
 <body>
 <header class="app-header">
   <div class="header-row">
     <div>
-      <div class="eyebrow">DEPOT-COCKPIT · PROFESSIONAL 3.0</div>
+      <div class="eyebrow">DEPOT-COCKPIT · PROFESSIONAL 3.0.1</div>
       <h1>Übersicht</h1>
     </div>
     <button id="refreshBtn" class="icon-button" aria-label="Marktdaten aktualisieren" title="Marktdaten aktualisieren">↻</button>
@@ -89,15 +89,15 @@
     <div class="analysis-tabs"><button class="active">Performance</button><button>Allokation</button><button>Risiko</button></div>
     <article class="panel"><div class="panel-head"><h3>Depotbeiträge heute</h3></div><div id="contributors"></div></article>
     <article class="panel chart-panel"><div class="panel-head"><h3>Performance</h3><strong id="chartHeadline">–</strong></div><div class="large-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
-    <article class="panel"><div class="panel-head"><h3>Datenprüfung</h3></div><div id="diagnostics"></div></article>
+    <article class="panel"><div class="panel-head"><div><h3>Kursdiagnose 3.0.1</h3><p class="muted">Bewertungskurs, EOD-Reihe, Vortag und Handelsplatz transparent je Position.</p></div></div><div class="info-banner"><b>Architekturhinweis:</b> Broker-Handelsplatz und EODHD-Symbol sind getrennte Angaben. Tageswerte sind derzeit EOD-Schlusskurswerte, keine Intraday-Livewerte.</div><div id="diagnostics"></div></article>
   </section>
 
   <section id="manage" class="page">
     <div class="section-title"><div><span class="panel-kicker">VERWALTUNG</span><h2>Einstellungen</h2><p>Depots, Wertpapiere, Handelsplätze und Sicherungen.</p></div></div>
 
     <details class="settings-group" open><summary>Depots verwalten</summary><div class="settings-content">
-      <label>S Broker Gesamtwert (€)<input id="sbrokerReference" inputmode="decimal"></label>
-      <label>Trade Republic Gesamtwert (€)<input id="trReference" inputmode="decimal"></label>
+      <label>S Broker Referenzwert – manuell (€)<input id="sbrokerReference" inputmode="decimal"></label>
+      <label>Trade Republic Referenzwert – manuell (€)<input id="trReference" inputmode="decimal"></label>
       <button id="saveReferences" class="primary-action wide">Speichern</button>
     </div></details>
 
@@ -130,6 +130,6 @@
   <button data-page="manage"><b>⚙</b><span>Einstellungen</span></button>
 </nav>
 <div id="toast" class="toast"></div>
-<script src="/app.js?v=3.0-design1" defer></script>
+<script src="/app.js?v=3.0.1" defer></script>
 </body>
 </html>
