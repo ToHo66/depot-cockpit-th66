@@ -1,12 +1,19 @@
-# Depot-Cockpit Professional 3.0.3 – Berechnungsstabilität
+# Depot-Cockpit Professional 3.1 – Kursmanager
 
-Diese Unterversion verhindert unrealistische Gewinn-/Verlustanzeigen, solange Kursdaten fehlen oder nur teilweise geladen sind.
+## Kernänderung
 
-## Änderungen
+Version 3.1 behebt den konkreten Übertragungsfehler aus 3.0.3: Die API erwartet eine Handelsplatz-Kandidatenliste; diese wird jetzt bei jeder Kursabfrage aus den gespeicherten Zuordnungen erzeugt und mitgesendet.
 
-- Gesamtgewinn wird erst berechnet, wenn alle Positionen mit Einstandskurs auch einen Bewertungskurs besitzen.
-- Vor der ersten Kursabfrage erscheinen Striche statt eines künstlichen Verlusts von −153.273,67 €.
-- Marktdaten werden automatisch nach dem Start geladen, sofern EODHD in Vercel konfiguriert ist.
-- Die letzte erfolgreiche Kursabfrage wird für bis zu 24 Stunden lokal zwischengespeichert.
-- Teilweise verfügbare Brokerwerte und Gesamtwerte werden klar als unvollständig behandelt.
-- Version auf 3.0.3 vereinheitlicht.
+## Kursmanager
+
+Unter **Einstellungen → Kursmanager 3.1** werden alle Positionen zentral geprüft und konfiguriert:
+
+- Broker-Referenzplatz
+- EODHD-Hauptsymbol
+- getrennte Symbole für Xetra, Frankfurt und Stuttgart
+- optionaler manueller Brokerkurs
+- Status aktiv / offen / fehlerhaft
+- sichtbare Abrufreihenfolge
+- Schaltfläche „Speichern & Kurse prüfen“
+
+Tradegate, gettex und Lang & Schwarz besitzen in EODHD nicht zwingend eigene Kursreihen. In diesen Fällen bleibt der Broker-Referenzplatz sichtbar, während eine unterstützte EODHD-Reihe für die Historie verwendet oder ein manueller Brokerkurs für die aktuelle Bewertung eingetragen wird.

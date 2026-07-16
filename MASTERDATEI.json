@@ -1,5 +1,5 @@
 {
-  "version": "3.0.3-berechnungsstabilitaet",
+  "version": "3.1.0",
   "referenceDate": "2026-07-14",
   "sBrokerReferenceValueEUR": 167818.83,
   "rules": {
@@ -139,5 +139,18 @@
   "reconciliationNotes": [
     "The 11 sBroker positions sum exactly to the screenshot total of EUR 167,818.83.",
     "Xtrackers MSCI World Value was listed in an older project brief but is not visible in the current sBroker screenshots and is therefore not active in this master basis until reconfirmed."
-  ]
+  ],
+  "versionName": "Kursmanager",
+  "updatedAt": "2026-07-16",
+  "courseManager": {
+    "required": true,
+    "releaseGate": "Depotwerte werden nur bei vollständiger Kurszuordnung freigegeben.",
+    "fields": [
+      "Broker-Referenzplatz",
+      "EODHD-Symbol je Handelsplatz",
+      "manueller Brokerkurs",
+      "Abrufstatus",
+      "Fehlertext"
+    ]
+  }
 }
