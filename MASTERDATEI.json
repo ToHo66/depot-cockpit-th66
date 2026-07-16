@@ -1,5 +1,5 @@
 {
-  "version": "3.1.1",
+  "version": "3.2.0",
   "referenceDate": "2026-07-14",
   "sBrokerReferenceValueEUR": 167818.83,
   "rules": {
@@ -36,7 +36,12 @@
       "Lang & Schwarz",
       "Société Générale",
       "Direkthandel"
-    ]
+    ],
+    "courseArchitecture": {
+      "analysisCourse": "Feste, reproduzierbare EODHD-Zeitreihe je Position",
+      "brokerDisplaySource": "Nur Information; kann täglich zwischen Quotrix, L&S, Société Générale usw. wechseln",
+      "brokerComparison": "Optionaler Gesamtwert oder manuelle Positionswerte; steuert niemals die Analysezeitreihe"
+    }
   },
   "activeSBrokerPositions": [
     {

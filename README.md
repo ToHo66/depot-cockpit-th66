@@ -1,19 +1,10 @@
-# Depot-Cockpit Professional 3.1.1 – Kursmanager
+# Depot-Cockpit Professional 3.2 – Getrennte Kurslogik
 
-## Kernänderung
+Version 3.2 trennt dauerhaft:
 
-Version 3.1 behebt den konkreten Übertragungsfehler aus 3.0.3: Die API erwartet eine Handelsplatz-Kandidatenliste; diese wird jetzt bei jeder Kursabfrage aus den gespeicherten Zuordnungen erzeugt und mitgesendet.
+- **Feste Analysebörse:** stabile EODHD-Zeitreihe für Tag, Woche, Monat, Charts und später den Trend-Wächter.
+- **Broker-Anzeigequelle:** reine Information aus dem sBroker, zum Beispiel Quotrix, Lang & Schwarz oder Société Générale. Sie darf wechseln und steuert niemals den EODHD-Abruf.
+- **Broker-Abgleich:** optionaler Gesamtwert, Positionswert oder Brokerkurs für einen zeitgleichen Vergleich.
 
-## Kursmanager
-
-Unter **Einstellungen → Kursmanager 3.1** werden alle Positionen zentral geprüft und konfiguriert:
-
-- Broker-Referenzplatz
-- EODHD-Hauptsymbol
-- getrennte Symbole für Xetra, Frankfurt und Stuttgart
-- optionaler manueller Brokerkurs
-- Status aktiv / offen / fehlerhaft
-- sichtbare Abrufreihenfolge
-- Schaltfläche „Speichern & Kurse prüfen“
-
-Tradegate, gettex und Lang & Schwarz besitzen in EODHD nicht zwingend eigene Kursreihen. In diesen Fällen bleibt der Broker-Referenzplatz sichtbar, während eine unterstützte EODHD-Reihe für die Historie verwendet oder ein manueller Brokerkurs für die aktuelle Bewertung eingetragen wird.
+Sichtbarer Test:
+Unter **Einstellungen → Kurslogik 3.2** stehen Broker-Anzeigequelle und feste Analysebörse in getrennten Feldern. Unter **Analyse** werden beide getrennt ausgewiesen.
