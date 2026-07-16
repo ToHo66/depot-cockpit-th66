@@ -1,4 +1,4 @@
-# Depot-Cockpit Professional 3.1 – Kursmanager
+# Depot-Cockpit Professional 3.1.1 – Kursmanager
 
 ## Kernänderung
 
