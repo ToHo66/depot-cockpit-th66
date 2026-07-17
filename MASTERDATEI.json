@@ -1,5 +1,5 @@
 {
-  "version": "3.2.2",
+  "version": "3.2.3",
   "referenceDate": "2026-07-14",
   "sBrokerReferenceValueEUR": 167818.83,
   "rules": {
@@ -52,6 +52,16 @@
         "ungeklärter Rest"
       ],
       "usage": "Einmalige Kalibrierung mit zeitgleichen Broker-Positionswerten; keine tägliche Pflicht"
+    },
+    "differenceCheckerPriority": {
+      "weights": {
+        "positionSize": 45,
+        "knownBrokerGap": 25,
+        "dailyMove": 15,
+        "sourceRisk": 10,
+        "missingData": 5
+      },
+      "goal": "Die drei wahrscheinlichsten Verursacher zuerst prüfen, statt alle Positionen manuell abzugleichen."
     }
   },
   "activeSBrokerPositions": [

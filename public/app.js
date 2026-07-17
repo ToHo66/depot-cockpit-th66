@@ -40,9 +40,9 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='3.2.2';
+const APP_VERSION='3.2.3';
 const STORE='th66-professional-v22-master';
-const MARKET_CACHE='th66-professional-market-cache-v322';
+const MARKET_CACHE='th66-professional-market-cache-v323';
 DEFAULT_POSITIONS.forEach(normalizePosition);
 const state={positions:structuredClone(DEFAULT_POSITIONS),archive:[],transactions:[],data:{},settings:{sbrokerReference:167818.83,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']},updatedAt:null};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -148,9 +148,16 @@ function renderReconciliationSummary(){
   const box=$('#reconciliationSummary');if(!box)return;
   const appTotal=brokerTotal('sBroker'),ref=state.settings.sbrokerReference;
   const gap=Number.isFinite(appTotal)&&Number.isFinite(ref)?appTotal-ref:null;
-  const known=state.positions.filter(p=>p.broker==='sBroker'&&Number.isFinite(brokerPositionValue(p))).length;
-  const total=state.positions.filter(p=>p.broker==='sBroker').length;
-  box.innerHTML=`<div><span class="panel-kicker">DEPOT-ABGLEICH</span><h3>${eur(gap)} Abweichung</h3><p>App ${eur(appTotal)} gegenüber S Broker ${eur(ref)} · ${known}/${total} Positionswerte geprüft.</p></div><button class="secondary-action">Differenz prüfen</button>`;
+  const positions=state.positions.filter(p=>p.broker==='sBroker');
+  const known=positions.filter(p=>Number.isFinite(brokerPositionValue(p))).length;
+  const ranked=positions.map(p=>({p,priority:positionPriority(p)})).sort((a,b)=>b.priority.score-a.priority.score).slice(0,3);
+  box.innerHTML=`<div>
+    <span class="panel-kicker">DEPOT-ABGLEICH</span>
+    <h3>${eur(gap)} Abweichung</h3>
+    <p>App ${eur(appTotal)} gegenüber S Broker ${eur(ref)} · ${known}/${positions.length} Positionswerte geprüft.</p>
+    <div class="mini-priority-list">${ranked.map((x,i)=>`<span>${i+1}. ${x.p.name}</span>`).join('')}</div>
+  </div>
+  <button class="secondary-action">Top-Verursacher prüfen</button>`;
   box.querySelector('button').onclick=()=>showPage('analysis')
 }
 
@@ -159,13 +166,60 @@ function renderMarketToday(){const rows=state.positions.map(p=>({p,v:marketDayCo
 function renderPositions(){$('#positionList').innerHTML=['sBroker','Trade Republic'].map(broker=>{const ps=state.positions.filter(p=>p.broker===broker);if(!ps.length)return '';return `<h3 class="broker-title">${broker}</h3>`+ps.map(p=>{const d=state.data[p.id],manual=brokerPrice(p),price=valuationPrice(p),val=positionValue(p),perf=d?.performance||{},status=d?.ok?'ok':Number.isFinite(manual)?'warn':d?'error':'warn',statusText=d?.ok?(Number.isFinite(manual)?'Brokerkurs + EOD-Historie':'EODHD geladen'):Number.isFinite(manual)?'Nur Brokerkurs':d?.error||'Noch nicht geladen';return `<article class="position-card"><div class="position-summary"><div><h3>${p.name}</h3><p>${p.qty.toLocaleString('de-DE')} Stück · ${p.isin}${p.wkn?` · ${p.wkn}`:''}</p><span class="badge ${status}">${statusText}</span></div><div class="price"><strong>${eur(price,price<20?3:2)}</strong><small>${eur(val)}</small></div></div><div class="position-details"><div class="meta-grid"><div class="meta-box"><span>Broker</span><strong>${p.broker}</strong></div><div class="meta-box"><span>Broker-Anzeigequelle</span><strong>${p.brokerDisplaySource||'–'}</strong></div><div class="meta-box"><span>Feste Analysebörse</span><strong>${p.analysisVenue||'–'}</strong></div><div class="meta-box"><span>Alternativen / Datenquelle</span><strong>${(p.fallbackVenues||[]).join(' → ')||'–'}<br>${p.dataSource}${p.marketSymbol?` · ${p.marketSymbol}`:''}</strong></div></div><div class="perf-grid">${[['Tag',perf.day],['Woche',perf.week],['Monat',perf.month],['3 Monate',perf.threeMonths],['1 Jahr',perf.year]].map(([n,x])=>`<div class="perf-box"><span>${n}</span><strong class="${cls(x?.pct)}">${pc(x?.pct)}</strong><small>${x?.baseDate||'–'} · ${eur(x?.basePrice,3)}</small></div>`).join('')}</div><div class="chart-wrap">${chartSvg(d?.chart)}</div><div class="source">${d?.source||d?.error||'Noch keine Marktdaten'}${d?.latest?`<br>Letzter EOD-Kurs: ${d.latest.date}`:''}${Number.isFinite(manual)?`<br>Aktuelle Bewertung mit Brokerkurs: ${eur(manual,3)}`:''}${Number.isFinite(p.purchasePrice)?`<br>Kaufkurs: ${eur(p.purchasePrice,3)} · Gewinn/Verlust ${pc((price/p.purchasePrice-1)*100)}`:''}</div></div></article>`}).join('')}).join('');$$('.position-summary').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'))}
 function renderAnalysis(){const rows=state.positions.map(p=>({p,v:marketDayContribution(p)})).filter(x=>Number.isFinite(x.v)).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));$('#contributors').innerHTML=rows.length?rows.map(x=>`<div class="market-row"><div><b>${x.p.name}</b><small class="muted">EOD-Tagesbeitrag · Schlusskurs gegen Vortag</small></div><strong class="${cls(x.v)}">${eur(x.v)}</strong></div>`).join(''):'<p class="muted">Nach der ersten Aktualisierung verfügbar.</p>';$('#diagnostics').innerHTML=state.positions.map(p=>{const d=state.data[p.id],manual=brokerPrice(p),latest=d?.latest?.price,prev=d?.performance?.day?.basePrice,appPrice=valuationPrice(p),delta=Number.isFinite(manual)&&Number.isFinite(latest)?manual-latest:null;let status=d?.ok?'EOD geladen':Number.isFinite(manual)?'Nur Brokerkurs':d?.error||'Noch nicht geladen';let klass=d?.ok?'positive':d?.error?'negative':'warn';return `<div class="diagnostic-card"><div class="diag-title"><div><b>${p.name}</b><small>${p.qty.toLocaleString('de-DE')} Stück · ${p.broker}</small></div><strong class="${klass}">${status}</strong></div><div class="diag-grid"><span>Broker-Anzeigequelle (Info)<b>${p.brokerDisplaySource||'–'}</b></span><span>Feste Analysebörse<b>${p.analysisVenue||'–'}</b></span><span>Tatsächlich verwendete Analysebörse<b>${d?.usedVenue||'–'}</b></span><span>Tatsächliche EODHD-Reihe<b>${d?.symbol||p.marketSymbol||'–'}</b></span><span>Kursdatum<b>${d?.latest?.date||'–'}</b></span><span>EOD-Schlusskurs<b>${eur(latest,3)}</b></span><span>Vortagesschluss<b>${eur(prev,3)}</b></span><span>EOD-Tagesänderung<b class="${cls(d?.performance?.day?.pct)}">${pc(d?.performance?.day?.pct)}</b></span><span>Bewertungskurs der App<b>${eur(appPrice,3)}</b></span><span>Manueller Brokerkurs<b>${eur(manual,3)}</b></span><span>Differenz Broker/EOD<b class="${cls(delta)}">${eur(delta,3)}</b></span><span>Tagesbeitrag EOD<b class="${cls(marketDayContribution(p))}">${eur(marketDayContribution(p))}</b></span></div><p class="diagnostic-note">${d?.venueWarning||'Der Handelsplatz steuert den Abruf automatisch. Unterstützt sind Xetra, Frankfurt, Stuttgart, Euronext Paris/Amsterdam und US. Tradegate, gettex sowie Lang & Schwarz benötigen weiterhin einen manuellen Brokerkurs.'}</p></div>`}).join('')}
 
+
+function positionPriority(p){
+  const value=positionValue(p);
+  const analysis=appEodValue(p);
+  const brokerVal=brokerPositionValue(p);
+  const day=Math.abs(marketDayContribution(p)||0);
+  const brokerGap=Number.isFinite(brokerVal)&&Number.isFinite(value)?Math.abs(value-brokerVal):0;
+  const venueRisk=(p.brokerDisplaySource&&p.analysisVenue&&p.brokerDisplaySource!==p.analysisVenue)?1:0;
+  const missingBroker=Number.isFinite(brokerVal)?0:1;
+  const missingCourse=Number.isFinite(value)?0:1;
+  const weight=Math.abs(value||analysis||0);
+
+  // Gewichtung:
+  // 45 % Positionsgröße, 25 % bekannte Brokerabweichung,
+  // 15 % Tagesbewegung, 10 % Quellenrisiko, 5 % Datenlücke.
+  const score=
+    Math.min(weight/60000,1)*45+
+    Math.min(brokerGap/2000,1)*25+
+    Math.min(day/700,1)*15+
+    venueRisk*10+
+    (missingBroker||missingCourse)*5;
+
+  const reasons=[];
+  if(weight>=25000)reasons.push('hoher Depotanteil');
+  if(brokerGap>=250)reasons.push(`bekannte Abweichung ${eur(brokerGap)}`);
+  if(day>=250)reasons.push(`starker Tagesbeitrag ${eur(day)}`);
+  if(venueRisk)reasons.push('Brokerquelle und Analysebörse weichen ab');
+  if(missingBroker)reasons.push('Broker-Positionswert fehlt');
+  if(missingCourse)reasons.push('Bewertungskurs fehlt');
+
+  return {
+    score:Math.round(score),
+    reasons:reasons.length?reasons:['geringere Priorität'],
+    brokerGap,
+    weight,
+    day
+  }
+}
+
+function priorityLabel(score){
+  if(score>=75)return {text:'Priorität 1',level:'bad'};
+  if(score>=50)return {text:'Priorität 2',level:'warn'};
+  if(score>=30)return {text:'Priorität 3',level:'ok'};
+  return {text:'später prüfen',level:'muted'}
+}
+
 function renderBrokerComparison(){
   const box=$('#brokerComparison');if(!box)return;
   const rows=state.positions.filter(p=>p.broker==='sBroker').map(p=>{
     const brokerVal=brokerPositionValue(p),analysisVal=appEodValue(p),usedVal=positionValue(p);
     const diffUsed=Number.isFinite(brokerVal)&&Number.isFinite(usedVal)?usedVal-brokerVal:null;
-    return {p,brokerVal,analysisVal,usedVal,diffUsed}
-  }).sort((a,b)=>Math.abs(b.diffUsed||0)-Math.abs(a.diffUsed||0));
+    const priority=positionPriority(p);
+    return {p,brokerVal,analysisVal,usedVal,diffUsed,priority}
+  }).sort((a,b)=>b.priority.score-a.priority.score);
 
   const known=rows.filter(x=>Number.isFinite(x.brokerVal));
   const unknown=rows.filter(x=>!Number.isFinite(x.brokerVal));
@@ -175,6 +229,7 @@ function renderBrokerComparison(){
   const knownAppSum=known.reduce((a,x)=>a+(Number.isFinite(x.usedVal)?x.usedVal:0),0);
   const unknownAppSum=unknown.reduce((a,x)=>a+(Number.isFinite(x.usedVal)?x.usedVal:0),0);
   const residual=Number.isFinite(reference)?reference-knownBrokerSum-unknownAppSum:null;
+  const top=rows.slice(0,3);
 
   box.innerHTML=`<div class="comparison-summary reconciliation-summary">
     <span>Aktueller App-Wert <b>${eur(appTotal)}</b></span>
@@ -184,17 +239,40 @@ function renderBrokerComparison(){
     <span>Bereits erklärter Anteil <b class="${cls(knownAppSum-knownBrokerSum)}">${eur(knownAppSum-knownBrokerSum)}</b></span>
     <span>Noch ungeklärter Rest <b class="${cls(-residual)}">${eur(-residual)}</b></span>
   </div>
-  <p class="diagnostic-note">Der ungeklärte Rest wird kleiner, sobald weitere zeitgleiche S-Broker-Positionswerte eingetragen werden. Die Liste ist nach größter bekannter Abweichung sortiert.</p>`+
-  rows.map(x=>`<div class="comparison-row ${Number.isFinite(x.brokerVal)?'known':'unknown'}">
-    <div><b>${x.p.name}</b><small>${x.p.qty.toLocaleString('de-DE')} Stück · ${x.p.isin}</small></div>
-    <div class="comparison-values">
-      <span>Brokerwert <b>${eur(x.brokerVal)}</b></span>
-      <span>App-Bewertung <b>${eur(x.usedVal)}</b></span>
-      <span>Analyse-EOD <b>${eur(x.analysisVal)}</b></span>
-      <span>Abweichung <b class="${cls(x.diffUsed)}">${eur(x.diffUsed)}</b></span>
-      <span>Status <b>${Number.isFinite(x.brokerVal)?'geprüft':'Brokerwert fehlt'}</b></span>
+
+  <div class="priority-box">
+    <div class="panel-head">
+      <div><span class="panel-kicker">SCHNELLPRÜFUNG</span><h4>Diese drei Positionen zuerst prüfen</h4></div>
     </div>
-  </div>`).join('');
+    ${top.map((x,i)=>{
+      const label=priorityLabel(x.priority.score);
+      return `<div class="priority-row">
+        <span class="priority-rank">${i+1}</span>
+        <div><b>${x.p.name}</b><small>${x.priority.reasons.join(' · ')}</small></div>
+        <span class="course-status ${label.level}">${label.text} · ${x.priority.score}</span>
+      </div>`
+    }).join('')}
+  </div>
+
+  <p class="diagnostic-note">Die Reihenfolge berücksichtigt Depotgröße, bekannte Abweichung, Tagesbewegung, Quellenrisiko und fehlende Brokerwerte. So müssen zuerst nur die wahrscheinlichsten Verursacher geprüft werden.</p>`+
+  rows.map(x=>{
+    const label=priorityLabel(x.priority.score);
+    return `<div class="comparison-row ${Number.isFinite(x.brokerVal)?'known':'unknown'}">
+      <div>
+        <b>${x.p.name}</b>
+        <small>${x.p.qty.toLocaleString('de-DE')} Stück · ${x.p.isin}</small>
+        <small>${x.priority.reasons.join(' · ')}</small>
+      </div>
+      <div class="comparison-values">
+        <span>Prüfpriorität <b class="course-status ${label.level}">${x.priority.score}/100</b></span>
+        <span>Brokerwert <b>${eur(x.brokerVal)}</b></span>
+        <span>App-Bewertung <b>${eur(x.usedVal)}</b></span>
+        <span>Analyse-EOD <b>${eur(x.analysisVal)}</b></span>
+        <span>Abweichung <b class="${cls(x.diffUsed)}">${eur(x.diffUsed)}</b></span>
+        <span>Status <b>${Number.isFinite(x.brokerVal)?'geprüft':'Brokerwert fehlt'}</b></span>
+      </div>
+    </div>`
+  }).join('');
 }
 
 function renderManage(){['newVenue'].forEach(id=>$('#'+id).innerHTML=venueOptions('Xetra'));$('#sbrokerReference').value=state.settings.sbrokerReference?.toLocaleString('de-DE')||'';$('#trReference').value=state.settings.trReference?.toLocaleString('de-DE')||'';$('#positionEditors').innerHTML=state.positions.map(p=>`<div class="editor-card" data-id="${p.id}"><div class="editor-head"><b>${p.name}</b><button class="danger archive-btn" data-id="${p.id}">Archivieren</button></div><div class="editor-grid"><label>Name<input data-field="name" value="${p.name}"></label><label>ISIN<input data-field="isin" value="${p.isin}"></label><label>WKN<input data-field="wkn" value="${p.wkn||''}"></label><label>Stückzahl<input data-field="qty" inputmode="decimal" value="${p.qty}"></label><label>Kaufkurs<input data-field="purchasePrice" inputmode="decimal" value="${Number.isFinite(p.purchasePrice)?String(p.purchasePrice).replace('.',','):''}"></label><label>Broker<select data-field="broker"><option ${p.broker==='sBroker'?'selected':''}>sBroker</option><option ${p.broker==='Trade Republic'?'selected':''}>Trade Republic</option></select></label><label>Broker-Anzeigequelle (nur Info)<input data-field="brokerDisplaySource" value="${p.brokerDisplaySource||''}" placeholder="Quotrix, L&S, Société Générale"></label><label>Feste Analysebörse<select data-field="analysisVenue">${venueOptions(p.analysisVenue)}</select></label><label>Analyse-Ersatzbörsen<input data-field="fallbackVenues" value="${(p.fallbackVenues||[]).filter(v=>EODHD_VENUE_CODES[v]).join(', ')}" placeholder="Frankfurt, Stuttgart"></label><label>Datenquelle<select data-field="dataSource"><option value="EODHD" ${p.dataSource==='EODHD'?'selected':''}>EODHD</option><option value="MANUAL" ${p.dataSource==='MANUAL'?'selected':''}>Nur Brokerkurs</option></select></label><label>Festes Analyse-Symbol<input data-field="analysisSymbol" value="${p.analysisSymbol||p.marketSymbol||''}"></label><label>Xetra-Symbol<input data-venue-symbol="Xetra" value="${p.venueSymbols?.Xetra||''}"></label><label>Frankfurt-Symbol<input data-venue-symbol="Frankfurt" value="${p.venueSymbols?.Frankfurt||''}"></label><label>Stuttgart-Symbol<input data-venue-symbol="Stuttgart" value="${p.venueSymbols?.Stuttgart||''}"></label></div></div>`).join('');$('#brokerPositionValueInputs').innerHTML=state.positions.map(p=>`<div class="broker-line"><div><b>${p.name}</b><small>${p.qty.toLocaleString('de-DE')} Stück · App EOD ${eur(appEodValue(p))}</small></div><input class="broker-position-value-input" data-id="${p.id}" inputmode="decimal" placeholder="Positionswert €" value="${Number.isFinite(brokerPositionValue(p))?String(brokerPositionValue(p)).replace('.',','):''}"></div>`).join('');$('#brokerPriceInputs').innerHTML=state.positions.map(p=>`<div class="broker-line"><div><b>${p.name}</b><small>${p.qty} Stück · Brokeranzeige ${p.brokerDisplaySource||'–'} · Analyse ${p.analysisVenue||'–'}</small></div><input class="broker-input" data-id="${p.id}" inputmode="decimal" placeholder="Kurs" value="${Number.isFinite(state.settings.brokerPrices[p.id])?String(state.settings.brokerPrices[p.id]).replace('.',','):''}"></div>`).join('');$('#archiveList').innerHTML=state.archive.length?state.archive.map(p=>`<div class="archive-row"><div><b>${p.name}</b><small class="muted">${p.isin} · ${p.archiveReason||'archiviert'}</small></div><button class="secondary restore-btn" data-id="${p.id}">Wiederherstellen</button></div>`).join(''):'<p class="muted">Keine archivierten Positionen.</p>';$$('.archive-btn').forEach(b=>b.onclick=()=>archivePosition(b.dataset.id));$$('.restore-btn').forEach(b=>b.onclick=()=>restorePosition(b.dataset.id))}
@@ -226,4 +304,4 @@ function recordTransaction(){
 async function refresh(){const b=$('#refreshBtn');b.disabled=true;b.textContent='…';$('#setupBanner').classList.add('hidden');try{const positions=state.positions.filter(p=>p.dataSource==='EODHD').map(p=>({...p,brokerVenue:p.analysisVenue,analysisVenue:p.analysisVenue,candidates:venueCandidates(p)}));const r=await fetch('/api/market-data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({positions})});const x=await r.json();if(!r.ok||!x.ok)throw Object.assign(new Error(x.error||'Datenabruf fehlgeschlagen'),{code:x.code});state.data=Object.fromEntries(x.results.map(y=>[y.id,y]));state.updatedAt=x.generatedAt;saveMarketCache();render();toast('Marktdaten aktualisiert')}catch(e){const ban=$('#setupBanner');ban.classList.remove('hidden');ban.innerHTML=e.code==='API_KEY_MISSING'?'<b>EODHD-Schlüssel fehlt.</b><br>Bitte in Vercel als <code>EODHD_API_KEY</code> hinterlegen.':'<b>Datenabruf fehlgeschlagen:</b><br>'+e.message;toast('Marktdaten konnten nicht geladen werden')}finally{b.disabled=false;b.textContent='↻'}}
 function showPage(page){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));$$('.page').forEach(x=>x.classList.remove('active'));$('#'+page)?.classList.add('active');scrollTo({top:0,behavior:'smooth'})}
 function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#saveCourseManager').onclick=saveCourseManager;$('#testCourseManager').onclick=async()=>{saveCourseManager();await refresh();showPage('manage');document.querySelector('#courseManagerBlock')?.scrollIntoView({behavior:'smooth',block:'start'})};$('#recordTransaction').onclick=recordTransaction;$('#txDate').value=new Date().toISOString().slice(0,10);$('#txVenue').innerHTML=venueOptions('Tradegate');$('#expandAll').onclick=()=>{const cards=$$('.position-card'),all=cards.every(c=>c.classList.contains('open'));cards.forEach(c=>c.classList.toggle('open',!all));$('#expandAll').textContent=all?'Alle öffnen':'Alle schließen'};$('#saveReferences').onclick=()=>{state.settings.sbrokerReference=parseNum($('#sbrokerReference').value);state.settings.sbrokerReferenceUpdatedAt=state.settings.sbrokerReference?new Date().toISOString():null;state.settings.trReference=parseNum($('#trReference').value);state.settings.trReferenceUpdatedAt=state.settings.trReference?new Date().toISOString():null;save();render();toast('Manuelle Broker-Referenzen gespeichert')};$('#saveBrokerPositionValues').onclick=()=>{$$('.broker-position-value-input').forEach(i=>{const p=state.positions.find(x=>x.id===i.dataset.id);const n=parseNum(i.value);if(Number.isFinite(n)&&p?.qty>0){state.settings.brokerPositionValues[p.id]=n;state.settings.brokerPrices[p.id]=n/p.qty}else{delete state.settings.brokerPositionValues[i.dataset.id]}});const sbVals=state.positions.filter(p=>p.broker==='sBroker').map(p=>brokerPositionValue(p)).filter(Number.isFinite);if(sbVals.length===state.positions.filter(p=>p.broker==='sBroker').length){state.settings.sbrokerReference=sbVals.reduce((a,b)=>a+b,0);state.settings.sbrokerReferenceUpdatedAt=new Date().toISOString()}save();render();toast('Broker-Positionswerte gespeichert')};$('#saveBrokerPrices').onclick=()=>{$$('.broker-input').forEach(i=>{const n=parseNum(i.value);if(Number.isFinite(n))state.settings.brokerPrices[i.dataset.id]=n;else delete state.settings.brokerPrices[i.dataset.id]});save();render();toast('Brokerkurse gespeichert')};$('#savePositionSettings').onclick=()=>{$$('.editor-card').forEach(card=>{const p=state.positions.find(x=>x.id===card.dataset.id);card.querySelectorAll('[data-field]').forEach(el=>{const f=el.dataset.field;let v=el.value;if(['qty','purchasePrice'].includes(f))v=parseNum(v);if(f==='fallbackVenues')v=String(v).split(',').map(x=>x.trim()).filter(Boolean);p[f]=v});p.venueSymbols={...(p.venueSymbols||{})};card.querySelectorAll('[data-venue-symbol]').forEach(el=>{const venue=el.dataset.venueSymbol;const value=el.value.trim();if(value)p.venueSymbols[venue]=value;else delete p.venueSymbols[venue]});p.marketSymbol=p.analysisSymbol||p.marketSymbol;normalizePosition(p)});save();render();toast('Stammdaten gespeichert')};$('#addPosition').onclick=()=>{const name=$('#newName').value.trim(),isin=$('#newIsin').value.trim().toUpperCase(),qty=parseNum($('#newQty').value);if(!name||!isin||!Number.isFinite(qty)){toast('Name, ISIN und Stückzahl fehlen');return}state.positions.push(normalizePosition({id:uid(),name,isin,wkn:$('#newWkn').value.trim().toUpperCase(),qty,purchasePrice:parseNum($('#newPurchasePrice').value),broker:$('#newBroker').value,brokerDisplaySource:$('#newVenue').value,analysisVenue:'Xetra',fallbackVenues:$('#newFallbackVenues').value.split(',').map(x=>x.trim()).filter(Boolean),dataSource:$('#newSource').value,analysisSymbol:$('#newSymbol').value.trim(),currency:'EUR'}));save();render();toast('Position hinzugefügt')};$('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({version:APP_VERSION,exportedAt:new Date().toISOString(),positions:state.positions,archive:state.archive,transactions:state.transactions,settings:state.settings},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`depot-cockpit-sicherung-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)};$('#importInput').onchange=async e=>{try{const x=JSON.parse(await e.target.files[0].text());if(!Array.isArray(x.positions)||!x.settings)throw new Error();state.positions=x.positions;state.archive=x.archive||[];state.transactions=x.transactions||[];state.settings={...state.settings,...x.settings,brokerPrices:{...(x.settings.brokerPrices||{})},brokerPositionValues:{...(x.settings.brokerPositionValues||{})}};save();render();toast('Sicherung importiert')}catch{toast('Ungültige Sicherungsdatei')}};$('#resetBtn').onclick=()=>{if(confirm('Lokale Stammdaten, Brokerwerte und Archiv wirklich zurücksetzen?')){localStorage.removeItem(STORE);state.positions=structuredClone(DEFAULT_POSITIONS);state.archive=[];state.transactions=[];state.settings={sbrokerReference:167818.83,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']};state.data={};render();toast('Lokale Daten zurückgesetzt')}}}
-load();loadMarketCache();wire();render();fetch('/api/health').then(r=>r.json()).then(x=>{if(!x.eodhdConfigured){const b=$('#setupBanner');b.classList.remove('hidden');b.innerHTML='<b>Depot-Cockpit Professional 3.2.2 ist aktiv.</b><br>Für EODHD-Marktdaten fehlt noch der geschützte Schlüssel in Vercel.'}else{refresh()}}).catch(()=>{});
+load();loadMarketCache();wire();render();fetch('/api/health').then(r=>r.json()).then(x=>{if(!x.eodhdConfigured){const b=$('#setupBanner');b.classList.remove('hidden');b.innerHTML='<b>Depot-Cockpit Professional 3.2.3 ist aktiv.</b><br>Für EODHD-Marktdaten fehlt noch der geschützte Schlüssel in Vercel.'}else{refresh()}}).catch(()=>{});

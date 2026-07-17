@@ -1,12 +1,16 @@
-# Depot-Cockpit Professional 3.2.2 – Depot-Differenzprüfer
+# Depot-Cockpit Professional 3.2.3 – Priorisierte Fehlersuche
 
 Neu:
-- Abweichungskarte direkt auf der Übersicht
-- App-Gesamtwert gegen aktuellen S-Broker-Referenzwert
-- Anzahl bereits geprüfter Positionswerte
-- bereits erklärter Differenzanteil
-- noch ungeklärter Rest
-- je Position: Brokerwert, App-Bewertung, Analyse-EOD, Abweichung und Prüfstatus
-- Sortierung nach größter bekannter Abweichung
+- automatische Prüfpriorität 0–100 je Position
+- Top-3-Verdachtspositionen direkt auf der Übersicht
+- Schnellprüfung im Differenzprüfer
+- Gewichtung aus:
+  - Positionsgröße
+  - bekannter Brokerabweichung
+  - Tagesbewegung
+  - abweichender Brokerquelle/Analysebörse
+  - fehlenden Kurs- oder Brokerdaten
+- Sortierung nach Wahrscheinlichkeit, die Gesamtdifferenz zu verursachen
 
-Die Eingabe der Broker-Positionswerte dient der einmaligen Kalibrierung und ist nicht als tägliche Pflicht vorgesehen.
+Ziel:
+Nicht mehr alle elf Positionen manuell prüfen, sondern zuerst nur die drei wahrscheinlichsten Verursacher.

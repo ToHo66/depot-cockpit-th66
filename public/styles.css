@@ -21,3 +21,17 @@
   .reconciliation-card{align-items:flex-start;flex-direction:column}
   .reconciliation-summary{grid-template-columns:1fr 1fr}
 }
+
+.priority-box{margin:18px 0;padding:16px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.03)}
+.priority-box h4{margin:.2rem 0 0;font-size:1.05rem}
+.priority-row{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.priority-row:first-of-type{border-top:0}
+.priority-row small{display:block;color:var(--muted);margin-top:3px}
+.priority-rank{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--blue);font-weight:800}
+.mini-priority-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.mini-priority-list span{padding:6px 10px;border-radius:999px;background:rgba(71,132,255,.12);font-size:.82rem}
+.course-status.muted{opacity:.65}
+@media(max-width:700px){
+  .priority-row{grid-template-columns:30px 1fr}
+  .priority-row .course-status{grid-column:2}
+}
