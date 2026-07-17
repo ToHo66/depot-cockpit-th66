@@ -10,3 +10,14 @@
 
 /* 3.1.1 Broker-Abgleich */
 .comparison-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}.comparison-summary span,.comparison-row{background:rgba(255,255,255,.035);border:1px solid rgba(148,163,184,.14);border-radius:14px;padding:12px}.comparison-summary span{display:flex;flex-direction:column;gap:5px;color:#94a3b8}.comparison-summary b{color:#f8fafc}.comparison-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,1fr);gap:12px;align-items:center;margin-bottom:10px}.comparison-row small{display:block;color:#94a3b8;margin-top:4px}.comparison-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.comparison-values span{display:flex;flex-direction:column;gap:4px;color:#94a3b8;font-size:.82rem}.comparison-values b{font-size:.96rem;color:#f8fafc}.comparison-values b.positive{color:#22c55e}.comparison-values b.negative{color:#ef4444}@media(max-width:720px){.comparison-row{grid-template-columns:1fr}.comparison-values{grid-template-columns:repeat(3,1fr)}.comparison-summary{grid-template-columns:1fr 1fr}}
+
+.reconciliation-card{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.reconciliation-card h3{font-size:1.35rem;margin:.2rem 0}
+.reconciliation-card p{margin:0;color:var(--muted)}
+.reconciliation-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+.comparison-row.unknown{opacity:.72}
+.comparison-row.known{border-left:3px solid var(--blue)}
+@media(max-width:700px){
+  .reconciliation-card{align-items:flex-start;flex-direction:column}
+  .reconciliation-summary{grid-template-columns:1fr 1fr}
+}

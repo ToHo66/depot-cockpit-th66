@@ -1,5 +1,5 @@
 {
-  "version": "3.2.1",
+  "version": "3.2.2",
   "referenceDate": "2026-07-14",
   "sBrokerReferenceValueEUR": 167818.83,
   "rules": {
@@ -41,6 +41,17 @@
       "analysisCourse": "Feste, reproduzierbare EODHD-Zeitreihe je Position",
       "brokerDisplaySource": "Nur Information; kann täglich zwischen Quotrix, L&S, Société Générale usw. wechseln",
       "brokerComparison": "Optionaler Gesamtwert oder manuelle Positionswerte; steuert niemals die Analysezeitreihe"
+    },
+    "differenceChecker": {
+      "purpose": "Gesamtabweichung positionsweise erklären",
+      "shows": [
+        "App-Bewertung",
+        "Broker-Positionswert",
+        "Analyse-EOD",
+        "Differenz",
+        "ungeklärter Rest"
+      ],
+      "usage": "Einmalige Kalibrierung mit zeitgleichen Broker-Positionswerten; keine tägliche Pflicht"
     }
   },
   "activeSBrokerPositions": [
