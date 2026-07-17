@@ -1,10 +1,15 @@
-# Depot-Cockpit Professional 3.2 – Getrennte Kurslogik
+# Depot-Cockpit Professional 3.2.1 – Render-Korrektur
 
-Version 3.2 trennt dauerhaft:
+Diese Korrektur behebt den Laufzeitfehler:
 
-- **Feste Analysebörse:** stabile EODHD-Zeitreihe für Tag, Woche, Monat, Charts und später den Trend-Wächter.
-- **Broker-Anzeigequelle:** reine Information aus dem sBroker, zum Beispiel Quotrix, Lang & Schwarz oder Société Générale. Sie darf wechseln und steuert niemals den EODHD-Abruf.
-- **Broker-Abgleich:** optionaler Gesamtwert, Positionswert oder Brokerkurs für einen zeitgleichen Vergleich.
+`Can't find variable: render`
 
-Sichtbarer Test:
-Unter **Einstellungen → Kurslogik 3.2** stehen Broker-Anzeigequelle und feste Analysebörse in getrennten Feldern. Unter **Analyse** werden beide getrennt ausgewiesen.
+Ursache:
+Beim Erstellen von Version 3.2 wurde die zentrale `render()`-Funktion versehentlich aus `public/app.js` entfernt. Dadurch konnte die App nach dem Laden keine Oberfläche und keine Kursdaten mehr aktualisieren.
+
+Geprüfter sichtbarer Test:
+- Versionskennung 3.2.1
+- kein Hinweis `Can't find variable: render`
+- Dashboard wird aufgebaut
+- Kursabruf startet wieder
+- Kursmanager wird ebenfalls gerendert
