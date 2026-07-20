@@ -7,14 +7,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="stylesheet" href="/styles.css?v=design-hell-1" />
+  <link rel="stylesheet" href="/styles.css?v=release-0.4" />
   <title>Depot-Cockpit Professional</title>
 </head>
 <body>
 <header class="app-header">
   <div class="header-row">
     <div>
-      <div class="eyebrow">DEPOT-COCKPIT · DESIGNSTUDIE HELL</div>
+      <div class="eyebrow">DEPOT-COCKPIT · RELEASE 0.4</div>
       <h1>Übersicht</h1>
     </div>
     <button id="refreshBtn" class="icon-button" aria-label="Marktdaten aktualisieren" title="Marktdaten aktualisieren">↻</button>
@@ -90,16 +90,16 @@
     <div class="section-title"><div><span class="panel-kicker">AUSWERTUNG</span><h2>Analyse</h2><p>Performance, Beiträge und Datenqualität.</p></div></div>
     <div class="analysis-tabs"><button class="active">Performance</button><button>Allokation</button><button>Risiko</button></div>
     <article class="panel"><div class="panel-head"><h3>Depotbeiträge heute</h3></div><div id="contributors"></div></article>
-    <article class="panel"><div class="panel-head"><div><h3>Depot-Differenzprüfer 3.2.3</h3><p class="muted">Priorisiert automatisch die wahrscheinlichsten Verursacher der Gesamtabweichung.</p></div></div><div id="brokerComparison"></div></article>
+    <article class="panel"><div class="panel-head"><div><h3>Depot-Differenzprüfer</h3><p class="muted">Priorisiert automatisch die wahrscheinlichsten Verursacher der Gesamtabweichung.</p></div></div><div id="brokerComparison"></div></article>
     <article class="panel chart-panel"><div class="panel-head"><h3>Performance</h3><strong id="chartHeadline">–</strong></div><div class="large-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
-    <article class="panel"><div class="panel-head"><div><h3>Kursdiagnose 3.1</h3><p class="muted">Bewertungskurs, EOD-Reihe, Vortag und Handelsplatz transparent je Position.</p></div></div><div class="info-banner"><b>Architekturhinweis:</b> Broker-Handelsplatz und EODHD-Symbol sind getrennte Angaben. Tageswerte sind derzeit EOD-Schlusskurswerte, keine Intraday-Livewerte.</div><div id="diagnostics"></div></article>
+    <article class="panel"><div class="panel-head"><div><h3>Kursdiagnose</h3><p class="muted">Bewertungskurs, EOD-Reihe, Vortag und Handelsplatz transparent je Position.</p></div></div><div class="info-banner"><b>Architekturhinweis:</b> Broker-Handelsplatz und EODHD-Symbol sind getrennte Angaben. Tageswerte sind derzeit EOD-Schlusskurswerte, keine Intraday-Livewerte.</div><div id="diagnostics"></div></article>
   </section>
 
   <section id="manage" class="page">
     <div class="section-title"><div><span class="panel-kicker">VERWALTUNG</span><h2>Einstellungen</h2><p>Depots, Wertpapiere, Handelsplätze und Sicherungen.</p></div></div>
 
 
-    <details id="courseManagerBlock" class="settings-group course-manager-group" open><summary>Kurslogik 3.2</summary><div class="settings-content">
+    <details id="courseManagerBlock" class="settings-group course-manager-group" open><summary>Kurslogik</summary><div class="settings-content">
       <p class="muted">Broker-Anzeigequelle und feste Analysebörse sind strikt getrennt. Wechselnde Brokeranzeigen wie Quotrix, Lang & Schwarz oder Société Générale verändern die historische Analysezeitreihe nicht.</p>
       <div id="courseManagerSummary" class="course-summary"></div>
       <div id="courseManager"></div>
@@ -147,6 +147,6 @@
   <button data-page="manage"><b>⚙</b><span>Einstellungen</span></button>
 </nav>
 <div id="toast" class="toast"></div>
-<script src="/app.js?v=3.2.3-fixed" defer></script>
+<script src="/app.js?v=release-0.4" defer></script>
 </body>
 </html>

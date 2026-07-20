@@ -1,17 +1,12 @@
-# Depot-Cockpit Professional 3.2.3 – generalüberholt
+# Depot-Cockpit Release 0.4
 
-Behoben:
-- alter Standardwert 167.818,83 € vollständig entfernt
-- nur noch ein zentraler Speicher
-- Migration älterer Daten auf derselben Adresse
-- automatische Umleitung aller Vercel-Vorschauadressen auf die feste Produktionsadresse
-- Zurücksetzen setzt die Referenz auf „nicht erfasst“
-- Hilfe & Diagnose klein und eingeklappt unter Einstellungen
-- untere Navigation deutlich heller
+## Enthalten
+- Premium-Light-Design mit stärkerem Kontrast
+- dunklere Grauwerte für bessere Lesbarkeit
+- vollständig sichtbare, mittig fixierte untere Navigation
+- aktiver Navigationspunkt klar hervorgehoben
+- iPhone-Anpassung auch für schmale Displays
+- bestehende Speicher-, Depot- und Kurslogik aus dem generalüberholten Stand
 
-Abnahmetest:
-1. Referenzwert speichern.
-2. Seite neu laden.
-3. Browser schließen und feste Produktionsadresse erneut öffnen.
-4. Wert muss erhalten bleiben.
-5. Nach Zurücksetzen darf 167.818,83 € nirgends erscheinen.
+## Installationshinweis
+Den Inhalt dieses Ordners wie bisher vollständig in das GitHub-Projekt übernehmen und in Vercel als Production Deployment veröffentlichen.

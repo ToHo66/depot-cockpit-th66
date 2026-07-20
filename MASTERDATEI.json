@@ -1,5 +1,5 @@
 {
-  "version": "3.2.3-generalüberholt",
+  "version": "0.4",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -183,6 +183,15 @@
       "manueller Brokerkurs",
       "Abrufstatus",
       "Fehlertext"
+    ]
+  },
+  "releaseNotes": {
+    "0.4": [
+      "Premium-Light-Oberfläche mit erhöhtem Text- und Flächenkontrast",
+      "Untere Hauptnavigation vollständig sichtbar, mittig und iPhone-sicher ausgerichtet",
+      "Aktiver Navigationspunkt klar blau hinterlegt",
+      "Keine automatische Umleitung von Vorschauadressen",
+      "Bestehende Depot-, Speicher- und Kurslogik unverändert übernommen"
     ]
   }
 }

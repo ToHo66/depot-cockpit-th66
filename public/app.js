@@ -40,12 +40,8 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='3.2.3';
+const APP_VERSION='0.4';
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
-const IS_VERCEL_PREVIEW=location.hostname.endsWith('.vercel.app')&&location.hostname!==CANONICAL_HOST;
-if(IS_VERCEL_PREVIEW){
-  location.replace(`https://${CANONICAL_HOST}${location.pathname}${location.search}${location.hash}`)
-}
 const STORE='th66-professional-master-v3';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
 const MARKET_CACHE='th66-professional-market-cache-v323';
