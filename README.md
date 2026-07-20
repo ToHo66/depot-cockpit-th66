@@ -1,12 +1,11 @@
-# Depot-Cockpit Release 0.4
+# Depot-Cockpit Release 4.0
 
-## Enthalten
-- Premium-Light-Design mit stärkerem Kontrast
-- dunklere Grauwerte für bessere Lesbarkeit
-- vollständig sichtbare, mittig fixierte untere Navigation
-- aktiver Navigationspunkt klar hervorgehoben
-- iPhone-Anpassung auch für schmale Displays
-- bestehende Speicher-, Depot- und Kurslogik aus dem generalüberholten Stand
+## Korrekturen
+- Release-Bezeichnung von versehentlich 0.4 auf 4.0 berichtigt.
+- Darstellung der Zeiträume Tag, Woche, Monat, 3 Monate und 1 Jahr neu geordnet.
+- Fehlende 1-Jahres-Daten werden jetzt als klarer Hinweis angezeigt und nicht mehr als zusammenlaufende Zeichenfolge.
+- Performance-Karten sind auf Desktop, iPhone und schmalen Displays responsiv.
+- Bestehendes Premium-Light-Design und die mittige Navigation bleiben erhalten.
 
-## Installationshinweis
-Den Inhalt dieses Ordners wie bisher vollständig in das GitHub-Projekt übernehmen und in Vercel als Production Deployment veröffentlichen.
+## Installation
+Den Ordnerinhalt vollständig in das GitHub-Projekt übernehmen und als Production Deployment veröffentlichen.
