@@ -1,5 +1,5 @@
 {
-  "version": "4.1",
+  "version": "4.2",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -76,6 +76,12 @@
       "singleHistoryRequestPerSymbol": true,
       "preserveLastGoodDataOnError": true,
       "stopAfterRateLimit": true
+    },
+    "fallbackData": {
+      "loadBeforeRender": true,
+      "neverOverwriteGoodDataWithErrors": true,
+      "migrateLegacyCaches": true,
+      "showLastGoodPortfolioOnRateLimit": true
     }
   },
   "activeSBrokerPositions": [

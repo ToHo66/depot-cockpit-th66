@@ -159,7 +159,7 @@ export default async function handler(req,res){
   }
 
   return json(res,200,{
-    ok:true,version:'4.1',generatedAt:new Date().toISOString(),
+    ok:true,version:'4.2',generatedAt:new Date().toISOString(),
     rateLimited,networkRequests,cacheHits,
     method:'Eine 400-Tage-Zeitreihe je Symbol; alle Zeiträume werden daraus lokal berechnet. Browser- und Servercache verhindern unnötige Wiederholungsabrufe.',
     results

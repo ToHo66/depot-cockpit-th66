@@ -40,12 +40,12 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='4.1';
+const APP_VERSION='4.2';
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
 const STORE='th66-professional-master-v3';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
-const MARKET_CACHE='th66-professional-market-cache-v41';
-const LEGACY_MARKET_CACHES=['th66-professional-market-cache-v323'];
+const MARKET_CACHE='th66-professional-market-cache-v42';
+const LEGACY_MARKET_CACHES=['th66-professional-market-cache-v41','th66-professional-market-cache-v323'];
 const MARKET_FRESH_MS=6*60*60*1000;
 const MARKET_MAX_AGE_MS=14*24*60*60*1000;
 let marketCacheSavedAt=null;
@@ -116,44 +116,69 @@ function appEodValue(p){const price=marketPrice(p);return Number.isFinite(price)
 function valuationPrice(p){const manual=brokerPrice(p);return Number.isFinite(manual)?manual:marketPrice(p)}
 function positionValue(p){const price=valuationPrice(p);return Number.isFinite(price)?price*p.qty:null}
 function brokerTotal(name){const values=state.positions.filter(p=>p.broker===name).map(positionValue).filter(Number.isFinite);return values.length?values.reduce((a,b)=>a+b,0):null}
+function sanitizeMarketData(raw){
+  const cleaned={};
+  if(!raw||typeof raw!=='object')return cleaned;
+  for(const [id,item] of Object.entries(raw)){
+    if(item&&item.ok&&item.latest&&Number.isFinite(Number(item.latest.price))){
+      cleaned[id]={...item,cached:true}
+    }
+  }
+  return cleaned
+}
 function saveMarketCache(){
   try{
+    const cleaned=sanitizeMarketData(state.data);
+    if(!Object.keys(cleaned).length)return false;
     marketCacheSavedAt=new Date().toISOString();
     localStorage.setItem(MARKET_CACHE,JSON.stringify({
-      schemaVersion:2,
+      schemaVersion:3,
       savedAt:marketCacheSavedAt,
-      updatedAt:state.updatedAt,
-      data:state.data
-    }))
-  }catch{}
+      updatedAt:state.updatedAt||marketCacheSavedAt,
+      data:cleaned
+    }));
+    return true
+  }catch{return false}
+}
+function readMarketCacheKey(key){
+  try{
+    const raw=localStorage.getItem(key);
+    if(!raw)return null;
+    const parsed=JSON.parse(raw);
+    const cleaned=sanitizeMarketData(parsed?.data);
+    if(!Object.keys(cleaned).length)return null;
+    const savedAt=parsed.savedAt||parsed.updatedAt||new Date().toISOString();
+    const age=Date.now()-new Date(savedAt).getTime();
+    if(!Number.isFinite(age)||age>MARKET_MAX_AGE_MS)return null;
+    return {savedAt,updatedAt:parsed.updatedAt||savedAt,data:cleaned}
+  }catch{return null}
 }
 function loadMarketCache(){
+  const best=[MARKET_CACHE,...LEGACY_MARKET_CACHES]
+    .map(readMarketCacheKey).filter(Boolean)
+    .sort((a,b)=>new Date(b.savedAt)-new Date(a.savedAt))[0];
+  if(!best)return false;
+  state.data={...state.data,...best.data};
+  state.updatedAt=best.updatedAt;
+  marketCacheSavedAt=best.savedAt;
   try{
-    let raw=localStorage.getItem(MARKET_CACHE);
-    if(!raw){
-      for(const key of LEGACY_MARKET_CACHES){
-        raw=localStorage.getItem(key);
-        if(raw)break
-      }
-    }
-    const x=JSON.parse(raw||'null');
-    if(!x?.savedAt||!x?.data)return false;
-    const age=Date.now()-new Date(x.savedAt).getTime();
-    if(!Number.isFinite(age)||age>MARKET_MAX_AGE_MS)return false;
-    state.data=x.data;
-    state.updatedAt=x.updatedAt||x.savedAt;
-    marketCacheSavedAt=x.savedAt;
-    localStorage.setItem(MARKET_CACHE,JSON.stringify({...x,schemaVersion:2}));
-    return true
-  }catch{
-    return false
-  }
+    localStorage.setItem(MARKET_CACHE,JSON.stringify({
+      schemaVersion:3,savedAt:best.savedAt,updatedAt:best.updatedAt,data:best.data
+    }))
+  }catch{}
+  return true
 }
 function marketCacheAge(){
   return marketCacheSavedAt?Date.now()-new Date(marketCacheSavedAt).getTime():Infinity
 }
 function marketCacheIsFresh(){
   return marketCacheAge()<MARKET_FRESH_MS
+}
+function hasUsableMarketData(){
+  return Object.values(state.data).some(item=>item?.ok&&Number.isFinite(Number(item?.latest?.price)))
+}
+function markDataAsStored(){
+  for(const item of Object.values(state.data))if(item?.ok)item.cached=true
 }
 function friendlyMarketError(message){
   const text=String(message||'');
@@ -277,6 +302,7 @@ function renderDiagnostics(){
     <span>Bewertete Positionen<b>${calculated.length}/${sBrokerPositions.length}</b></span>
     <span>Kursdaten geladen<b>${Object.values(state.data).filter(x=>x?.ok).length}/${state.positions.length}</b></span>
     <span>Lokaler Kurscache<b>${Number.isFinite(marketCacheAge())?Math.round(marketCacheAge()/60000)+' Minuten alt':'nicht vorhanden'}</b></span>
+    <span>Gültiger Rückfallstand<b>${hasUsableMarketData()?'Ja':'Nein'}</b></span>
     <span>Alte Speicher auf dieser Adresse<b>${oldKeys.length?oldKeys.join(', '):'keine'}</b></span>
   </div>
   <p class="diagnostic-note">Nur zur Fehlersuche. Vorschauadressen werden automatisch auf die feste Produktionsadresse umgeleitet, damit Eingaben erhalten bleiben.</p>`
@@ -424,15 +450,20 @@ function recordTransaction(){
 }
 async function refresh({force=false,quiet=false}={}){
   const b=$('#refreshBtn');
-  if(!force&&marketCacheIsFresh()){
+  if(!force&&marketCacheIsFresh()&&hasUsableMarketData()){
     if(!quiet)toast('Gespeicherte Kursdaten sind aktuell');
     return
   }
+
+  const lastGoodData={...state.data};
+  const hadGoodData=hasUsableMarketData();
   b.disabled=true;b.textContent='…';$('#setupBanner').classList.add('hidden');
+
   try{
     const positions=state.positions
       .filter(p=>p.dataSource==='EODHD')
       .map(p=>({...p,brokerVenue:p.analysisVenue,analysisVenue:p.analysisVenue,candidates:venueCandidates(p)}));
+
     const r=await fetch('/api/market-data',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -441,42 +472,50 @@ async function refresh({force=false,quiet=false}={}){
     const x=await r.json();
     if(!r.ok||!x.ok)throw Object.assign(new Error(x.error||'Datenabruf fehlgeschlagen'),{code:x.code});
 
-    const merged={...state.data};
+    const merged={...lastGoodData};
     let successCount=0;
     for(const result of x.results||[]){
-      if(result?.ok){
+      if(result?.ok&&Number.isFinite(Number(result?.latest?.price))){
         merged[result.id]={...result,cached:Boolean(result.cached)};
         successCount++
       }else if(!merged[result.id]){
         merged[result.id]={...result,error:friendlyMarketError(result?.error)}
       }
     }
+
     state.data=merged;
-    if(successCount){
-      state.updatedAt=x.generatedAt;
+    if(successCount>0){
+      state.updatedAt=x.generatedAt||new Date().toISOString();
       saveMarketCache()
+    }else if(hadGoodData){
+      state.data=lastGoodData;
+      markDataAsStored()
     }
+
     render();
 
     if(x.rateLimited){
       const ban=$('#setupBanner');
       ban.classList.remove('hidden');
-      ban.innerHTML='<b>Kursdaten-Limit erreicht.</b><br>Die zuletzt gespeicherten Kursdaten bleiben sichtbar. Die App startet bis zur nächsten Aktualisierung keine automatischen Wiederholungen.';
-      if(!quiet)toast('Gespeicherte Kursdaten werden weiterverwendet')
+      ban.innerHTML=hadGoodData||hasUsableMarketData()
+        ?'<b>Kursdaten-Limit erreicht.</b><br>Der letzte gültige Depotstand bleibt vollständig sichtbar.'
+        :'<b>Kursdaten-Limit erreicht.</b><br>Es ist noch kein früherer gültiger Kursstand gespeichert.';
+      if(!quiet)toast(hadGoodData?'Letzter gültiger Stand bleibt aktiv':'Noch kein gespeicherter Kursstand vorhanden')
     }else if(!quiet){
-      toast(x.cacheHits?`Marktdaten aktualisiert · ${x.cacheHits} aus Servercache`:'Marktdaten aktualisiert')
+      toast(x.cacheHits?`Marktdaten aktualisiert · ${x.cacheHits} aus Cache`:'Marktdaten aktualisiert')
     }
   }catch(e){
+    state.data=lastGoodData;
+    if(hadGoodData)markDataAsStored();
+
     const ban=$('#setupBanner');
     ban.classList.remove('hidden');
-    const hasCached=Object.values(state.data).some(x=>x?.ok);
-    if(e.code==='API_KEY_MISSING'){
-      ban.innerHTML='<b>EODHD-Schlüssel fehlt.</b><br>Bitte in Vercel als <code>EODHD_API_KEY</code> hinterlegen.'
-    }else{
-      ban.innerHTML=`<b>Aktualisierung nicht möglich.</b><br>${friendlyMarketError(e.message)}${hasCached?' Die vorhandenen gespeicherten Kurse bleiben aktiv.':''}`
-    }
+    ban.innerHTML=hadGoodData
+      ?`<b>Aktualisierung nicht möglich.</b><br>${friendlyMarketError(e.message)} Der letzte gültige Depotstand bleibt vollständig sichtbar.`
+      :`<b>Aktualisierung nicht möglich.</b><br>${friendlyMarketError(e.message)} Es ist noch kein früherer gültiger Kursstand gespeichert.`;
+
     render();
-    if(!quiet)toast(hasCached?'Gespeicherte Kurse bleiben aktiv':'Marktdaten konnten nicht geladen werden')
+    if(!quiet)toast(hadGoodData?'Letzter gültiger Stand bleibt aktiv':'Keine gespeicherten Kursdaten vorhanden')
   }finally{
     b.disabled=false;b.textContent='↻'
   }
@@ -492,11 +531,23 @@ load();
 const restoredMarketCache=loadMarketCache();
 wire();
 render();
+
+if(restoredMarketCache&&hasUsableMarketData()){
+  const b=$('#setupBanner');
+  b.classList.remove('hidden');
+  b.innerHTML='<b>Gespeicherter Depotstand geladen.</b><br>Der letzte gültige Kursstand wird sofort angezeigt.';
+}
+
 fetch('/api/health').then(r=>r.json()).then(x=>{
   if(!x.eodhdConfigured){
     const b=$('#setupBanner');b.classList.remove('hidden');
-    b.innerHTML='<b>Depot-Cockpit Release 4.1 ist aktiv.</b><br>Für neue EODHD-Marktdaten fehlt noch der geschützte Schlüssel in Vercel.';
+    b.innerHTML='<b>Depot-Cockpit Release 4.2 ist aktiv.</b><br>Für neue Kursdaten fehlt der EODHD-Schlüssel. Ein gespeicherter Depotstand bleibt sichtbar.';
   }else if(!restoredMarketCache||!marketCacheIsFresh()){
     refresh({quiet:restoredMarketCache})
   }
-}).catch(()=>{});
+}).catch(()=>{
+  if(!restoredMarketCache){
+    const b=$('#setupBanner');b.classList.remove('hidden');
+    b.innerHTML='<b>Verbindung konnte nicht geprüft werden.</b><br>Es ist noch kein gespeicherter Kursstand vorhanden.'
+  }
+});
