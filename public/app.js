@@ -41,18 +41,73 @@ const DEFAULT_POSITIONS=[
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
 const APP_VERSION='3.2.3';
-const STORE='th66-professional-v22-master';
+const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
+const IS_VERCEL_PREVIEW=location.hostname.endsWith('.vercel.app')&&location.hostname!==CANONICAL_HOST;
+if(IS_VERCEL_PREVIEW){
+  location.replace(`https://${CANONICAL_HOST}${location.pathname}${location.search}${location.hash}`)
+}
+const STORE='th66-professional-master-v3';
+const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
 const MARKET_CACHE='th66-professional-market-cache-v323';
 DEFAULT_POSITIONS.forEach(normalizePosition);
-const state={positions:structuredClone(DEFAULT_POSITIONS),archive:[],transactions:[],data:{},settings:{sbrokerReference:167818.83,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']},updatedAt:null};
+const state={positions:structuredClone(DEFAULT_POSITIONS),archive:[],transactions:[],data:{},settings:{sbrokerReference:null,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']},updatedAt:null};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function parseNum(v){if(v==null||v==='')return null;const t=String(v).trim().replace(/\s/g,'');const normalized=t.includes(',')?t.replace(/\./g,'').replace(',','.'):t;const n=Number(normalized);return Number.isFinite(n)?n:null}
 function eur(v,d=2){return Number.isFinite(v)?new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',minimumFractionDigits:d,maximumFractionDigits:d}).format(v):'–'}
 function pc(v){return Number.isFinite(v)?`${v>=0?'+':''}${v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})} %`:'–'}
 function cls(v){return !Number.isFinite(v)?'':v>0?'positive':v<0?'negative':''}
 function uid(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-function save(){localStorage.setItem(STORE,JSON.stringify({positions:state.positions,archive:state.archive,transactions:state.transactions,settings:state.settings}))}
-function load(){try{const x=JSON.parse(localStorage.getItem(STORE)||'{}');if(Array.isArray(x.positions)&&x.positions.length)state.positions=x.positions.map(normalizePosition);if(Array.isArray(x.archive))state.archive=x.archive;if(Array.isArray(x.transactions))state.transactions=x.transactions;if(x.settings)state.settings={...state.settings,...x.settings,brokerPrices:{...state.settings.brokerPrices,...(x.settings.brokerPrices||{})},brokerPositionValues:{...(state.settings.brokerPositionValues||{}),...(x.settings.brokerPositionValues||{})}}}catch{}}
+function snapshot(){
+  return {
+    schemaVersion:3,
+    savedAt:new Date().toISOString(),
+    positions:state.positions,
+    archive:state.archive,
+    transactions:state.transactions,
+    settings:state.settings
+  }
+}
+function save(){
+  localStorage.setItem(STORE,JSON.stringify(snapshot()))
+}
+function migrateLegacyStorage(){
+  if(localStorage.getItem(STORE))return;
+  for(const key of LEGACY_STORES){
+    const raw=localStorage.getItem(key);
+    if(!raw)continue;
+    try{
+      const old=JSON.parse(raw);
+      if(old?.settings?.sbrokerReference===167818.83&&!old.settings.sbrokerReferenceUpdatedAt){
+        old.settings.sbrokerReference=null
+      }
+      localStorage.setItem(STORE,JSON.stringify({...old,schemaVersion:3,migratedAt:new Date().toISOString()}));
+      return
+    }catch{}
+  }
+}
+function load(){
+  migrateLegacyStorage();
+  try{
+    const x=JSON.parse(localStorage.getItem(STORE)||'{}');
+    if(Array.isArray(x.positions)&&x.positions.length)state.positions=x.positions.map(normalizePosition);
+    if(Array.isArray(x.archive))state.archive=x.archive;
+    if(Array.isArray(x.transactions))state.transactions=x.transactions;
+    if(x.settings){
+      const sb=Number(x.settings.sbrokerReference);
+      const tr=Number(x.settings.trReference);
+      state.settings={
+        ...state.settings,
+        ...x.settings,
+        sbrokerReference:Number.isFinite(sb)&&sb>0?sb:null,
+        trReference:Number.isFinite(tr)&&tr>0?tr:null,
+        brokerPrices:{...state.settings.brokerPrices,...(x.settings.brokerPrices||{})},
+        brokerPositionValues:{...state.settings.brokerPositionValues,...(x.settings.brokerPositionValues||{})}
+      }
+    }
+  }catch(error){
+    console.error('Lokale Daten konnten nicht geladen werden',error)
+  }
+}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function marketPrice(p){return state.data[p.id]?.latest?.price}
 function brokerPrice(p){return state.settings.brokerPrices[p.id]}
@@ -139,9 +194,9 @@ function render(){
   if($('#gainLossPct')){$('#gainLossPct').textContent=allInvestedValued?pc(gainPct):'Warten auf vollständige Kursdaten';$('#gainLossPct').className=cls(gainPct)}
   if($('#chartHeadline')){$('#chartHeadline').textContent=pc(day);$('#chartHeadline').className=cls(day)}
   const refDate=state.settings.sbrokerReferenceUpdatedAt?new Date(state.settings.sbrokerReferenceUpdatedAt).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}):'Datum unbekannt';
-  const deviation=Number.isFinite(sb)&&state.settings.sbrokerReference?sb-state.settings.sbrokerReference:null;
-  $('#valuationNote').textContent=state.settings.sbrokerReference?`S Broker Referenz (manuell, ${refDate}) ${eur(state.settings.sbrokerReference)} · Abweichung ${eur(deviation)}`:'Bewertung: manueller Brokerkurs hat Vorrang, sonst letzter EOD-Schlusskurs';
-  renderMarketToday();renderOverviewPositions();renderReconciliationSummary();renderPositions();renderAnalysis();renderBrokerComparison();renderManage();renderCourseManager();renderTransactions()
+  const deviation=Number.isFinite(sb)&&Number.isFinite(state.settings.sbrokerReference)?sb-state.settings.sbrokerReference:null;
+  $('#valuationNote').textContent=Number.isFinite(state.settings.sbrokerReference)?`S Broker Referenz (manuell, ${refDate}) ${eur(state.settings.sbrokerReference)} · Abweichung ${eur(deviation)}`:'Bewertung: manueller Brokerkurs hat Vorrang, sonst letzter EOD-Schlusskurs';
+  renderMarketToday();renderOverviewPositions();renderReconciliationSummary();renderDiagnostics();renderPositions();renderAnalysis();renderBrokerComparison();renderManage();renderCourseManager();renderTransactions()
 }
 
 function renderReconciliationSummary(){
@@ -159,6 +214,28 @@ function renderReconciliationSummary(){
   </div>
   <button class="secondary-action">Top-Verursacher prüfen</button>`;
   box.querySelector('button').onclick=()=>showPage('analysis')
+}
+
+
+function renderDiagnostics(){
+  const box=$('#diagnosticsContent');if(!box)return;
+  const sBrokerPositions=state.positions.filter(p=>p.broker==='sBroker');
+  const calculated=sBrokerPositions.map(p=>positionValue(p)).filter(Number.isFinite);
+  const calculatedSum=calculated.reduce((a,b)=>a+b,0);
+  const currentRef=state.settings.sbrokerReference;
+  const oldKeys=LEGACY_STORES.filter(k=>Boolean(localStorage.getItem(k)));
+  box.innerHTML=`<div class="diagnostic-grid">
+    <span>Geöffnete Adresse<b>${location.hostname}</b></span>
+    <span>Feste Produktionsadresse<b>${CANONICAL_HOST}</b></span>
+    <span>Aktiver Speicher<b>${STORE}</b></span>
+    <span>S-Broker-Referenz<b>${eur(currentRef)}</b></span>
+    <span>Referenz gespeichert<b>${state.settings.sbrokerReferenceUpdatedAt?new Date(state.settings.sbrokerReferenceUpdatedAt).toLocaleString('de-DE'):'Nein'}</b></span>
+    <span>Summe S-Broker-Positionen<b>${eur(calculated.length?calculatedSum:null)}</b></span>
+    <span>Bewertete Positionen<b>${calculated.length}/${sBrokerPositions.length}</b></span>
+    <span>Kursdaten geladen<b>${Object.values(state.data).filter(x=>x?.ok).length}/${state.positions.length}</b></span>
+    <span>Alte Speicher auf dieser Adresse<b>${oldKeys.length?oldKeys.join(', '):'keine'}</b></span>
+  </div>
+  <p class="diagnostic-note">Nur zur Fehlersuche. Vorschauadressen werden automatisch auf die feste Produktionsadresse umgeleitet, damit Eingaben erhalten bleiben.</p>`
 }
 
 function renderOverviewPositions(){const box=$('#overviewPositions');if(!box)return;const rows=state.positions.map(p=>({p,value:positionValue(p),pct:state.data[p.id]?.performance?.day?.pct})).sort((a,b)=>(b.value||0)-(a.value||0)).slice(0,5);box.innerHTML=rows.map(x=>`<div class="compact-position"><div><b>${x.p.name}</b><small>${x.p.qty.toLocaleString('de-DE')} Stück · ${x.p.broker}</small></div><div class="value-col"><b>${eur(x.value)}</b><small class="${cls(x.pct)}">${pc(x.pct)}</small></div></div>`).join('')}
@@ -303,5 +380,10 @@ function recordTransaction(){
 }
 async function refresh(){const b=$('#refreshBtn');b.disabled=true;b.textContent='…';$('#setupBanner').classList.add('hidden');try{const positions=state.positions.filter(p=>p.dataSource==='EODHD').map(p=>({...p,brokerVenue:p.analysisVenue,analysisVenue:p.analysisVenue,candidates:venueCandidates(p)}));const r=await fetch('/api/market-data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({positions})});const x=await r.json();if(!r.ok||!x.ok)throw Object.assign(new Error(x.error||'Datenabruf fehlgeschlagen'),{code:x.code});state.data=Object.fromEntries(x.results.map(y=>[y.id,y]));state.updatedAt=x.generatedAt;saveMarketCache();render();toast('Marktdaten aktualisiert')}catch(e){const ban=$('#setupBanner');ban.classList.remove('hidden');ban.innerHTML=e.code==='API_KEY_MISSING'?'<b>EODHD-Schlüssel fehlt.</b><br>Bitte in Vercel als <code>EODHD_API_KEY</code> hinterlegen.':'<b>Datenabruf fehlgeschlagen:</b><br>'+e.message;toast('Marktdaten konnten nicht geladen werden')}finally{b.disabled=false;b.textContent='↻'}}
 function showPage(page){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));$$('.page').forEach(x=>x.classList.remove('active'));$('#'+page)?.classList.add('active');scrollTo({top:0,behavior:'smooth'})}
-function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#saveCourseManager').onclick=saveCourseManager;$('#testCourseManager').onclick=async()=>{saveCourseManager();await refresh();showPage('manage');document.querySelector('#courseManagerBlock')?.scrollIntoView({behavior:'smooth',block:'start'})};$('#recordTransaction').onclick=recordTransaction;$('#txDate').value=new Date().toISOString().slice(0,10);$('#txVenue').innerHTML=venueOptions('Tradegate');$('#expandAll').onclick=()=>{const cards=$$('.position-card'),all=cards.every(c=>c.classList.contains('open'));cards.forEach(c=>c.classList.toggle('open',!all));$('#expandAll').textContent=all?'Alle öffnen':'Alle schließen'};$('#saveReferences').onclick=()=>{state.settings.sbrokerReference=parseNum($('#sbrokerReference').value);state.settings.sbrokerReferenceUpdatedAt=state.settings.sbrokerReference?new Date().toISOString():null;state.settings.trReference=parseNum($('#trReference').value);state.settings.trReferenceUpdatedAt=state.settings.trReference?new Date().toISOString():null;save();render();toast('Manuelle Broker-Referenzen gespeichert')};$('#saveBrokerPositionValues').onclick=()=>{$$('.broker-position-value-input').forEach(i=>{const p=state.positions.find(x=>x.id===i.dataset.id);const n=parseNum(i.value);if(Number.isFinite(n)&&p?.qty>0){state.settings.brokerPositionValues[p.id]=n;state.settings.brokerPrices[p.id]=n/p.qty}else{delete state.settings.brokerPositionValues[i.dataset.id]}});const sbVals=state.positions.filter(p=>p.broker==='sBroker').map(p=>brokerPositionValue(p)).filter(Number.isFinite);if(sbVals.length===state.positions.filter(p=>p.broker==='sBroker').length){state.settings.sbrokerReference=sbVals.reduce((a,b)=>a+b,0);state.settings.sbrokerReferenceUpdatedAt=new Date().toISOString()}save();render();toast('Broker-Positionswerte gespeichert')};$('#saveBrokerPrices').onclick=()=>{$$('.broker-input').forEach(i=>{const n=parseNum(i.value);if(Number.isFinite(n))state.settings.brokerPrices[i.dataset.id]=n;else delete state.settings.brokerPrices[i.dataset.id]});save();render();toast('Brokerkurse gespeichert')};$('#savePositionSettings').onclick=()=>{$$('.editor-card').forEach(card=>{const p=state.positions.find(x=>x.id===card.dataset.id);card.querySelectorAll('[data-field]').forEach(el=>{const f=el.dataset.field;let v=el.value;if(['qty','purchasePrice'].includes(f))v=parseNum(v);if(f==='fallbackVenues')v=String(v).split(',').map(x=>x.trim()).filter(Boolean);p[f]=v});p.venueSymbols={...(p.venueSymbols||{})};card.querySelectorAll('[data-venue-symbol]').forEach(el=>{const venue=el.dataset.venueSymbol;const value=el.value.trim();if(value)p.venueSymbols[venue]=value;else delete p.venueSymbols[venue]});p.marketSymbol=p.analysisSymbol||p.marketSymbol;normalizePosition(p)});save();render();toast('Stammdaten gespeichert')};$('#addPosition').onclick=()=>{const name=$('#newName').value.trim(),isin=$('#newIsin').value.trim().toUpperCase(),qty=parseNum($('#newQty').value);if(!name||!isin||!Number.isFinite(qty)){toast('Name, ISIN und Stückzahl fehlen');return}state.positions.push(normalizePosition({id:uid(),name,isin,wkn:$('#newWkn').value.trim().toUpperCase(),qty,purchasePrice:parseNum($('#newPurchasePrice').value),broker:$('#newBroker').value,brokerDisplaySource:$('#newVenue').value,analysisVenue:'Xetra',fallbackVenues:$('#newFallbackVenues').value.split(',').map(x=>x.trim()).filter(Boolean),dataSource:$('#newSource').value,analysisSymbol:$('#newSymbol').value.trim(),currency:'EUR'}));save();render();toast('Position hinzugefügt')};$('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({version:APP_VERSION,exportedAt:new Date().toISOString(),positions:state.positions,archive:state.archive,transactions:state.transactions,settings:state.settings},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`depot-cockpit-sicherung-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)};$('#importInput').onchange=async e=>{try{const x=JSON.parse(await e.target.files[0].text());if(!Array.isArray(x.positions)||!x.settings)throw new Error();state.positions=x.positions;state.archive=x.archive||[];state.transactions=x.transactions||[];state.settings={...state.settings,...x.settings,brokerPrices:{...(x.settings.brokerPrices||{})},brokerPositionValues:{...(x.settings.brokerPositionValues||{})}};save();render();toast('Sicherung importiert')}catch{toast('Ungültige Sicherungsdatei')}};$('#resetBtn').onclick=()=>{if(confirm('Lokale Stammdaten, Brokerwerte und Archiv wirklich zurücksetzen?')){localStorage.removeItem(STORE);state.positions=structuredClone(DEFAULT_POSITIONS);state.archive=[];state.transactions=[];state.settings={sbrokerReference:167818.83,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']};state.data={};render();toast('Lokale Daten zurückgesetzt')}}}
+function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#saveCourseManager').onclick=saveCourseManager;$('#testCourseManager').onclick=async()=>{saveCourseManager();await refresh();showPage('manage');document.querySelector('#courseManagerBlock')?.scrollIntoView({behavior:'smooth',block:'start'})};$('#recordTransaction').onclick=recordTransaction;$('#txDate').value=new Date().toISOString().slice(0,10);$('#txVenue').innerHTML=venueOptions('Tradegate');$('#expandAll').onclick=()=>{const cards=$$('.position-card'),all=cards.every(c=>c.classList.contains('open'));cards.forEach(c=>c.classList.toggle('open',!all));$('#expandAll').textContent=all?'Alle öffnen':'Alle schließen'};$('#saveReferences').onclick=()=>{const sbRef=parseNum($('#sbrokerReference').value);
+state.settings.sbrokerReference=Number.isFinite(sbRef)&&sbRef>0?sbRef:null;
+state.settings.sbrokerReferenceUpdatedAt=Number.isFinite(sbRef)&&sbRef>0?new Date().toISOString():null;
+const trRef=parseNum($('#trReference').value);
+state.settings.trReference=Number.isFinite(trRef)&&trRef>0?trRef:null;
+state.settings.trReferenceUpdatedAt=Number.isFinite(trRef)&&trRef>0?new Date().toISOString():null;save();render();toast('Manuelle Broker-Referenzen gespeichert')};$('#saveBrokerPositionValues').onclick=()=>{$$('.broker-position-value-input').forEach(i=>{const p=state.positions.find(x=>x.id===i.dataset.id);const n=parseNum(i.value);if(Number.isFinite(n)&&p?.qty>0){state.settings.brokerPositionValues[p.id]=n;state.settings.brokerPrices[p.id]=n/p.qty}else{delete state.settings.brokerPositionValues[i.dataset.id]}});const sbVals=state.positions.filter(p=>p.broker==='sBroker').map(p=>brokerPositionValue(p)).filter(Number.isFinite);if(sbVals.length===state.positions.filter(p=>p.broker==='sBroker').length){state.settings.sbrokerReference=sbVals.reduce((a,b)=>a+b,0);state.settings.sbrokerReferenceUpdatedAt=new Date().toISOString()}save();render();toast('Broker-Positionswerte gespeichert')};$('#saveBrokerPrices').onclick=()=>{$$('.broker-input').forEach(i=>{const n=parseNum(i.value);if(Number.isFinite(n))state.settings.brokerPrices[i.dataset.id]=n;else delete state.settings.brokerPrices[i.dataset.id]});save();render();toast('Brokerkurse gespeichert')};$('#savePositionSettings').onclick=()=>{$$('.editor-card').forEach(card=>{const p=state.positions.find(x=>x.id===card.dataset.id);card.querySelectorAll('[data-field]').forEach(el=>{const f=el.dataset.field;let v=el.value;if(['qty','purchasePrice'].includes(f))v=parseNum(v);if(f==='fallbackVenues')v=String(v).split(',').map(x=>x.trim()).filter(Boolean);p[f]=v});p.venueSymbols={...(p.venueSymbols||{})};card.querySelectorAll('[data-venue-symbol]').forEach(el=>{const venue=el.dataset.venueSymbol;const value=el.value.trim();if(value)p.venueSymbols[venue]=value;else delete p.venueSymbols[venue]});p.marketSymbol=p.analysisSymbol||p.marketSymbol;normalizePosition(p)});save();render();toast('Stammdaten gespeichert')};$('#addPosition').onclick=()=>{const name=$('#newName').value.trim(),isin=$('#newIsin').value.trim().toUpperCase(),qty=parseNum($('#newQty').value);if(!name||!isin||!Number.isFinite(qty)){toast('Name, ISIN und Stückzahl fehlen');return}state.positions.push(normalizePosition({id:uid(),name,isin,wkn:$('#newWkn').value.trim().toUpperCase(),qty,purchasePrice:parseNum($('#newPurchasePrice').value),broker:$('#newBroker').value,brokerDisplaySource:$('#newVenue').value,analysisVenue:'Xetra',fallbackVenues:$('#newFallbackVenues').value.split(',').map(x=>x.trim()).filter(Boolean),dataSource:$('#newSource').value,analysisSymbol:$('#newSymbol').value.trim(),currency:'EUR'}));save();render();toast('Position hinzugefügt')};$('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({version:APP_VERSION,exportedAt:new Date().toISOString(),positions:state.positions,archive:state.archive,transactions:state.transactions,settings:state.settings},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`depot-cockpit-sicherung-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)};$('#importInput').onchange=async e=>{try{const x=JSON.parse(await e.target.files[0].text());if(!Array.isArray(x.positions)||!x.settings)throw new Error();state.positions=x.positions;state.archive=x.archive||[];state.transactions=x.transactions||[];state.settings={...state.settings,...x.settings,brokerPrices:{...(x.settings.brokerPrices||{})},brokerPositionValues:{...(x.settings.brokerPositionValues||{})}};save();render();toast('Sicherung importiert')}catch{toast('Ungültige Sicherungsdatei')}};$('#resetBtn').onclick=()=>{if(confirm('Lokale Stammdaten, Brokerwerte und Archiv wirklich zurücksetzen?')){localStorage.removeItem(STORE);state.positions=structuredClone(DEFAULT_POSITIONS);state.archive=[];state.transactions=[];state.settings={sbrokerReference:null,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']};state.data={};render();toast('Lokale Daten zurückgesetzt')}}}
 load();loadMarketCache();wire();render();fetch('/api/health').then(r=>r.json()).then(x=>{if(!x.eodhdConfigured){const b=$('#setupBanner');b.classList.remove('hidden');b.innerHTML='<b>Depot-Cockpit Professional 3.2.3 ist aktiv.</b><br>Für EODHD-Marktdaten fehlt noch der geschützte Schlüssel in Vercel.'}else{refresh()}}).catch(()=>{});

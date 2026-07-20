@@ -1,7 +1,6 @@
 {
-  "version": "3.2.3",
+  "version": "3.2.3-generalüberholt",
   "referenceDate": "2026-07-14",
-  "sBrokerReferenceValueEUR": 167818.83,
   "rules": {
     "primaryDevice": "iPhone",
     "brokersSeparated": true,
@@ -62,6 +61,13 @@
         "missingData": 5
       },
       "goal": "Die drei wahrscheinlichsten Verursacher zuerst prüfen, statt alle Positionen manuell abzugleichen."
+    },
+    "storage": {
+      "canonicalHost": "depot-cockpit-th66-vercel-v20.vercel.app",
+      "storageKey": "th66-professional-master-v3",
+      "defaultBrokerReference": null,
+      "previewRedirect": true,
+      "diagnosticsLocation": "Einstellungen > Hilfe & Diagnose"
     }
   },
   "activeSBrokerPositions": [

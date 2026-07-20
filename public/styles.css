@@ -35,3 +35,12 @@
   .priority-row{grid-template-columns:30px 1fr}
   .priority-row .course-status{grid-column:2}
 }
+
+.bottom-nav button{color:rgba(255,255,255,.90)!important;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.bottom-nav button b{color:#fff!important}
+.bottom-nav button.active,.bottom-nav button.active b{color:#75adff!important}
+.bottom-nav .nav-add{color:#fff!important}
+.diagnostic-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.diagnostic-grid span{display:block;padding:10px;border:1px solid rgba(148,163,184,.10);background:#0a1421;border-radius:12px;color:var(--muted);font-size:10px;overflow-wrap:anywhere}
+.diagnostic-grid b{display:block;color:var(--text);font-size:12px;margin-top:4px}
+@media(max-width:600px){.diagnostic-grid{grid-template-columns:1fr}}

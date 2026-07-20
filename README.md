@@ -1,16 +1,17 @@
-# Depot-Cockpit Professional 3.2.3 – Priorisierte Fehlersuche
+# Depot-Cockpit Professional 3.2.3 – generalüberholt
 
-Neu:
-- automatische Prüfpriorität 0–100 je Position
-- Top-3-Verdachtspositionen direkt auf der Übersicht
-- Schnellprüfung im Differenzprüfer
-- Gewichtung aus:
-  - Positionsgröße
-  - bekannter Brokerabweichung
-  - Tagesbewegung
-  - abweichender Brokerquelle/Analysebörse
-  - fehlenden Kurs- oder Brokerdaten
-- Sortierung nach Wahrscheinlichkeit, die Gesamtdifferenz zu verursachen
+Behoben:
+- alter Standardwert 167.818,83 € vollständig entfernt
+- nur noch ein zentraler Speicher
+- Migration älterer Daten auf derselben Adresse
+- automatische Umleitung aller Vercel-Vorschauadressen auf die feste Produktionsadresse
+- Zurücksetzen setzt die Referenz auf „nicht erfasst“
+- Hilfe & Diagnose klein und eingeklappt unter Einstellungen
+- untere Navigation deutlich heller
 
-Ziel:
-Nicht mehr alle elf Positionen manuell prüfen, sondern zuerst nur die drei wahrscheinlichsten Verursacher.
+Abnahmetest:
+1. Referenzwert speichern.
+2. Seite neu laden.
+3. Browser schließen und feste Produktionsadresse erneut öffnen.
+4. Wert muss erhalten bleiben.
+5. Nach Zurücksetzen darf 167.818,83 € nirgends erscheinen.

@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="stylesheet" href="/styles.css?v=3.2.3" />
+  <link rel="stylesheet" href="/styles.css?v=3.2.3-fixed" />
   <title>Depot-Cockpit Professional</title>
 </head>
 <body>
@@ -130,7 +130,12 @@
     <details class="settings-group" open><summary>Broker-Abgleich je Position</summary><div class="settings-content"><p class="muted">Für die einmalige Kalibrierung zeitgleich sichtbare Positionswerte eintragen. Danach zeigt der Differenzprüfer sofort, welche Position die Gesamtabweichung verursacht.</p><div id="brokerPositionValueInputs"></div><button id="saveBrokerPositionValues" class="primary-action wide">Positionswerte speichern</button></div></details>
     <details class="settings-group"><summary>Brokerkurse</summary><div class="settings-content"><p class="muted">Brokerkurse dienen nur der aktuellen Bewertung. Historische Performance bleibt getrennt.</p><div id="brokerPriceInputs"></div><button id="saveBrokerPrices" class="primary-action wide">Brokerkurse speichern</button></div></details>
     <details class="settings-group"><summary>Archiv</summary><div class="settings-content"><div id="archiveList"></div></div></details>
-    <details class="settings-group"><summary>Daten & Backup</summary><div class="settings-content"><div class="button-row"><button id="exportBtn" class="secondary-action">JSON exportieren</button><label class="secondary-action file-label">JSON importieren<input id="importInput" type="file" accept="application/json"></label></div><button id="resetBtn" class="danger-action wide">Lokale Eingaben zurücksetzen</button></div></details>
+    <details class="settings-group" id="helpDiagnostics">
+  <summary>Hilfe & Diagnose</summary>
+  <div class="settings-content"><div id="diagnosticsContent"></div></div>
+</details>
+
+<details class="settings-group"><summary>Daten & Backup</summary><div class="settings-content"><div class="button-row"><button id="exportBtn" class="secondary-action">JSON exportieren</button><label class="secondary-action file-label">JSON importieren<input id="importInput" type="file" accept="application/json"></label></div><button id="resetBtn" class="danger-action wide">Lokale Eingaben zurücksetzen</button></div></details>
   </section>
 </main>
 
@@ -142,6 +147,6 @@
   <button data-page="manage"><b>⚙</b><span>Einstellungen</span></button>
 </nav>
 <div id="toast" class="toast"></div>
-<script src="/app.js?v=3.2.3" defer></script>
+<script src="/app.js?v=3.2.3-fixed" defer></script>
 </body>
 </html>
