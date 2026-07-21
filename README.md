@@ -1,11 +1,15 @@
-# Depot-Cockpit Release 4.0
+# Depot-Cockpit Release 4.3 – Diagnose
 
-## Korrekturen
-- Release-Bezeichnung von versehentlich 0.4 auf 4.0 berichtigt.
-- Darstellung der Zeiträume Tag, Woche, Monat, 3 Monate und 1 Jahr neu geordnet.
-- Fehlende 1-Jahres-Daten werden jetzt als klarer Hinweis angezeigt und nicht mehr als zusammenlaufende Zeichenfolge.
-- Performance-Karten sind auf Desktop, iPhone und schmalen Displays responsiv.
-- Bestehendes Premium-Light-Design und die mittige Navigation bleiben erhalten.
+Diese Version dient ausschließlich der Ursachenanalyse des Marktdaten-Caches.
 
-## Installation
-Den Ordnerinhalt vollständig in das GitHub-Projekt übernehmen und als Production Deployment veröffentlichen.
+Unter **Einstellungen → Hilfe & Diagnose** werden angezeigt:
+
+- alle relevanten localStorage-Schlüssel,
+- Größe und JSON-Lesbarkeit,
+- Schema, Zeitstempel und Anzahl der Kursdatensätze,
+- Zahl gültiger Kurse,
+- letzter Lade- und Speicherversuch,
+- API-Antwort und Ereignisprotokoll.
+
+Die Schaltfläche **Diagnose kopieren** kopiert einen vollständigen JSON-Bericht.
+Es gibt keine Lösch- oder Zurücksetzfunktion in der Diagnose.

@@ -1,9 +1,167 @@
 const DAY=86400000;
-function json(res,status,body){res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');res.status(status).json(body)}
+const SERVER_CACHE_TTL=6*60*60*1000;
+const marketCache=globalThis.__TH66_MARKET_CACHE__||(globalThis.__TH66_MARKET_CACHE__=new Map());
+const inflight=globalThis.__TH66_MARKET_INFLIGHT__||(globalThis.__TH66_MARKET_INFLIGHT__=new Map());
+
+function json(res,status,body){
+  res.setHeader('Content-Type','application/json; charset=utf-8');
+  res.setHeader('Cache-Control','no-store');
+  res.status(status).json(body)
+}
 function isoDate(d){return new Date(d).toISOString().slice(0,10)}
-function subCalendarMonths(date,months){const d=new Date(date),day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-months);const last=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,last));return d}
-function latestOnOrBefore(rows,targetDate){const target=isoDate(targetDate);for(let i=rows.length-1;i>=0;i--)if(rows[i].date<=target)return rows[i];return null}
-function pct(current,base){return Number.isFinite(current)&&Number.isFinite(base)&&base!==0?((current/base)-1)*100:null}
-function normalizeRows(raw){if(!Array.isArray(raw))return[];return raw.map(r=>({date:String(r.date||''),open:Number(r.open),high:Number(r.high),low:Number(r.low),close:Number(r.adjusted_close??r.close),volume:Number(r.volume||0)})).filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&Number.isFinite(r.close)&&r.close>0).sort((a,b)=>a.date.localeCompare(b.date))}
-async function fetchHistory(symbol,token,from,to){const url=new URL(`https://eodhd.com/api/eod/${encodeURIComponent(symbol)}`);url.searchParams.set('api_token',token);url.searchParams.set('fmt','json');url.searchParams.set('period','d');url.searchParams.set('order','a');url.searchParams.set('from',from);url.searchParams.set('to',to);const response=await fetch(url,{headers:{Accept:'application/json'}});const text=await response.text();if(!response.ok)throw new Error(`EODHD ${response.status}: ${text.slice(0,180)}`);let parsed;try{parsed=JSON.parse(text)}catch{throw new Error('EODHD lieferte kein gültiges JSON')}if(parsed?.error)throw new Error(String(parsed.error));return normalizeRows(parsed)}
-export default async function handler(req,res){if(req.method!=='POST')return json(res,405,{ok:false,error:'Nur POST ist erlaubt.'});const token=process.env.EODHD_API_KEY;if(!token)return json(res,503,{ok:false,code:'API_KEY_MISSING',error:'EODHD_API_KEY ist in Vercel noch nicht hinterlegt.'});const positions=Array.isArray(req.body?.positions)?req.body.positions:[];if(positions.length>40)return json(res,400,{ok:false,error:'Zu viele Positionen.'});const today=new Date(),from=isoDate(new Date(today.getTime()-400*DAY)),to=isoDate(today),results=[];for(const p of positions){const candidates=Array.isArray(p.candidates)?p.candidates.filter(x=>x&&String(x.symbol||'').trim()):[];if(!candidates.length){results.push({id:p.id,ok:false,error:'Kein unterstützter EODHD-Handelsplatz oder Symbol hinterlegt.'});continue}let rows=null,used=null,lastError=null;for(const candidate of candidates){try{const candidateRows=await fetchHistory(String(candidate.symbol).trim(),token,from,to);if(candidateRows.length<2)throw new Error('Zu wenige historische Datenpunkte.');rows=candidateRows;used={venue:String(candidate.venue||'Unbekannt'),symbol:String(candidate.symbol).trim()};break}catch(error){lastError=error}}if(!rows||!used){results.push({id:p.id,ok:false,error:lastError?.message||'Keine Kursreihe der Handelsplatz-Priorität war verfügbar.',attempted:candidates});continue}try{const symbol=used.symbol;const last=rows.at(-1),previous=rows.at(-2),lastDate=new Date(`${last.date}T12:00:00Z`),weekBase=latestOnOrBefore(rows,new Date(lastDate.getTime()-7*DAY)),monthBase=latestOnOrBefore(rows,subCalendarMonths(lastDate,1)),threeMonthBase=latestOnOrBefore(rows,subCalendarMonths(lastDate,3)),yearBase=latestOnOrBefore(rows,subCalendarMonths(lastDate,12));results.push({id:p.id,ok:true,symbol,usedVenue:used.venue,requestedVenue:p.analysisVenue||p.brokerVenue||null,attempted:candidates,venueWarning:(p.analysisVenue&&p.analysisVenue!==used.venue)?`Feste Analysebörse ${p.analysisVenue} lieferte keine Reihe; transparenter Ersatz: ${used.venue}. Die Broker-Anzeigequelle beeinflusst die Analyse nicht.`:'Feste Analysebörse wurde verwendet. Die Broker-Anzeigequelle beeinflusst die Analyse nicht.',currency:p.currency||'EUR',source:`EODHD EOD · ${used.venue} · durchgehend dieselbe Kursreihe`,latest:{date:last.date,price:last.close},performance:{day:{pct:pct(last.close,previous.close),baseDate:previous.date,basePrice:previous.close},week:{pct:pct(last.close,weekBase?.close),baseDate:weekBase?.date||null,basePrice:weekBase?.close||null},month:{pct:pct(last.close,monthBase?.close),baseDate:monthBase?.date||null,basePrice:monthBase?.close||null},threeMonths:{pct:pct(last.close,threeMonthBase?.close),baseDate:threeMonthBase?.date||null,basePrice:threeMonthBase?.close||null},year:{pct:pct(last.close,yearBase?.close),baseDate:yearBase?.date||null,basePrice:yearBase?.close||null}},chart:rows.slice(-260).map(r=>({date:r.date,close:r.close}))})}catch(error){results.push({id:p.id,ok:false,symbol:used?.symbol||null,error:error.message||'Unbekannter Datenfehler'})}}return json(res,200,{ok:true,version:'0.4',generatedAt:new Date().toISOString(),method:'3.2: Feste Analysebörse und Broker-Anzeigequelle sind getrennt. Nur die Analysebörse steuert die EODHD-Zeitreihe; Brokerwerte dienen ausschließlich dem aktuellen Vergleich.',results})}
+function subCalendarMonths(date,months){
+  const d=new Date(date),day=d.getUTCDate();
+  d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-months);
+  const last=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();
+  d.setUTCDate(Math.min(day,last));return d
+}
+function latestOnOrBefore(rows,targetDate){
+  const target=isoDate(targetDate);
+  for(let i=rows.length-1;i>=0;i--)if(rows[i].date<=target)return rows[i];
+  return null
+}
+function pct(current,base){
+  return Number.isFinite(current)&&Number.isFinite(base)&&base!==0?((current/base)-1)*100:null
+}
+function normalizeRows(raw){
+  if(!Array.isArray(raw))return[];
+  return raw.map(r=>({
+    date:String(r.date||''),open:Number(r.open),high:Number(r.high),low:Number(r.low),
+    close:Number(r.adjusted_close??r.close),volume:Number(r.volume||0)
+  })).filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&Number.isFinite(r.close)&&r.close>0)
+    .sort((a,b)=>a.date.localeCompare(b.date))
+}
+function isRateLimit(error){
+  return /402|daily API requests limit|rate.?limit/i.test(String(error?.message||error||''))
+}
+async function fetchHistoryNetwork(symbol,token,from,to){
+  const url=new URL(`https://eodhd.com/api/eod/${encodeURIComponent(symbol)}`);
+  url.searchParams.set('api_token',token);
+  url.searchParams.set('fmt','json');
+  url.searchParams.set('period','d');
+  url.searchParams.set('order','a');
+  url.searchParams.set('from',from);
+  url.searchParams.set('to',to);
+  const response=await fetch(url,{headers:{Accept:'application/json'}});
+  const text=await response.text();
+  if(!response.ok)throw new Error(`EODHD ${response.status}: ${text.slice(0,180)}`);
+  let parsed;
+  try{parsed=JSON.parse(text)}catch{throw new Error('EODHD lieferte kein gültiges JSON')}
+  if(parsed?.error)throw new Error(String(parsed.error));
+  return normalizeRows(parsed)
+}
+async function fetchHistory(symbol,token,from,to,force=false){
+  const key=`${symbol}|${from}|${to}`;
+  const hit=marketCache.get(key);
+  if(!force&&hit&&Date.now()-hit.savedAt<SERVER_CACHE_TTL){
+    return {rows:hit.rows,cached:true}
+  }
+  if(!force&&inflight.has(key))return inflight.get(key);
+  const promise=(async()=>{
+    const rows=await fetchHistoryNetwork(symbol,token,from,to);
+    marketCache.set(key,{savedAt:Date.now(),rows});
+    return {rows,cached:false}
+  })().finally(()=>inflight.delete(key));
+  inflight.set(key,promise);
+  return promise
+}
+function buildResult(p,rows,used,cached){
+  const symbol=used.symbol,last=rows.at(-1),previous=rows.at(-2);
+  const lastDate=new Date(`${last.date}T12:00:00Z`);
+  const weekBase=latestOnOrBefore(rows,new Date(lastDate.getTime()-7*DAY));
+  const monthBase=latestOnOrBefore(rows,subCalendarMonths(lastDate,1));
+  const threeMonthBase=latestOnOrBefore(rows,subCalendarMonths(lastDate,3));
+  const yearBase=latestOnOrBefore(rows,subCalendarMonths(lastDate,12));
+  return {
+    id:p.id,ok:true,cached,symbol,usedVenue:used.venue,
+    requestedVenue:p.analysisVenue||p.brokerVenue||null,
+    attempted:p.candidates||[],
+    venueWarning:(p.analysisVenue&&p.analysisVenue!==used.venue)
+      ?`Feste Analysebörse ${p.analysisVenue} lieferte keine Reihe; transparenter Ersatz: ${used.venue}.`
+      :'Feste Analysebörse wurde verwendet.',
+    currency:p.currency||'EUR',
+    source:`EODHD EOD · ${used.venue}${cached?' · Servercache':''}`,
+    latest:{date:last.date,price:last.close},
+    performance:{
+      day:{pct:pct(last.close,previous.close),baseDate:previous.date,basePrice:previous.close},
+      week:{pct:pct(last.close,weekBase?.close),baseDate:weekBase?.date||null,basePrice:weekBase?.close||null},
+      month:{pct:pct(last.close,monthBase?.close),baseDate:monthBase?.date||null,basePrice:monthBase?.close||null},
+      threeMonths:{pct:pct(last.close,threeMonthBase?.close),baseDate:threeMonthBase?.date||null,basePrice:threeMonthBase?.close||null},
+      year:{pct:pct(last.close,yearBase?.close),baseDate:yearBase?.date||null,basePrice:yearBase?.close||null}
+    },
+    chart:rows.slice(-260).map(r=>({date:r.date,close:r.close}))
+  }
+}
+export default async function handler(req,res){
+  if(req.method!=='POST')return json(res,405,{ok:false,error:'Nur POST ist erlaubt.'});
+  const token=process.env.EODHD_API_KEY;
+  if(!token)return json(res,503,{ok:false,code:'API_KEY_MISSING',error:'EODHD_API_KEY ist in Vercel noch nicht hinterlegt.'});
+
+  const positions=Array.isArray(req.body?.positions)?req.body.positions:[];
+  const force=Boolean(req.body?.force);
+  if(positions.length>40)return json(res,400,{ok:false,error:'Zu viele Positionen.'});
+
+  const today=new Date(),from=isoDate(new Date(today.getTime()-400*DAY)),to=isoDate(today);
+  const results=[],requestMemo=new Map();
+  let rateLimited=false,networkRequests=0,cacheHits=0;
+
+  for(const p of positions){
+    const candidates=Array.isArray(p.candidates)?p.candidates.filter(x=>x&&String(x.symbol||'').trim()):[];
+    if(!candidates.length){
+      results.push({id:p.id,ok:false,error:'Kein unterstützter EODHD-Handelsplatz oder Symbol hinterlegt.'});
+      continue
+    }
+    if(rateLimited){
+      results.push({id:p.id,ok:false,code:'RATE_LIMIT',error:'Tägliches Kursdaten-Limit erreicht.'});
+      continue
+    }
+
+    let rows=null,used=null,wasCached=false,lastError=null;
+    for(const candidate of candidates){
+      const symbol=String(candidate.symbol).trim();
+      try{
+        let payload=requestMemo.get(symbol);
+        if(!payload){
+          payload=await fetchHistory(symbol,token,from,to,force);
+          requestMemo.set(symbol,payload);
+          if(payload.cached)cacheHits++;else networkRequests++
+        }else{
+          cacheHits++
+        }
+        if(payload.rows.length<2)throw new Error('Zu wenige historische Datenpunkte.');
+        rows=payload.rows;wasCached=payload.cached;
+        used={venue:String(candidate.venue||'Unbekannt'),symbol};
+        break
+      }catch(error){
+        lastError=error;
+        if(isRateLimit(error)){
+          rateLimited=true;
+          break
+        }
+      }
+    }
+
+    if(!rows||!used){
+      results.push({
+        id:p.id,ok:false,
+        code:rateLimited?'RATE_LIMIT':'NO_SERIES',
+        error:rateLimited?'Tägliches Kursdaten-Limit erreicht.':(lastError?.message||'Keine Kursreihe verfügbar.'),
+        attempted:candidates
+      });
+      continue
+    }
+
+    try{
+      results.push(buildResult(p,rows,used,wasCached))
+    }catch(error){
+      results.push({id:p.id,ok:false,symbol:used.symbol,error:error.message||'Unbekannter Datenfehler'})
+    }
+  }
+
+  return json(res,200,{
+    ok:true,version:'4.3-diagnose',generatedAt:new Date().toISOString(),
+    rateLimited,networkRequests,cacheHits,
+    method:'Eine 400-Tage-Zeitreihe je Symbol; alle Zeiträume werden daraus lokal berechnet. Browser- und Servercache verhindern unnötige Wiederholungsabrufe.',
+    results
+  })
+}
