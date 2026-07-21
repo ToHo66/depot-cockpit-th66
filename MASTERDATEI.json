@@ -1,5 +1,5 @@
 {
-  "version": "4.2",
+  "version": "4.0",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -68,20 +68,6 @@
       "defaultBrokerReference": null,
       "previewRedirect": true,
       "diagnosticsLocation": "Einstellungen > Hilfe & Diagnose"
-    },
-    "marketDataCache": {
-      "browserFreshHours": 6,
-      "browserRetentionDays": 14,
-      "serverBestEffortHours": 6,
-      "singleHistoryRequestPerSymbol": true,
-      "preserveLastGoodDataOnError": true,
-      "stopAfterRateLimit": true
-    },
-    "fallbackData": {
-      "loadBeforeRender": true,
-      "neverOverwriteGoodDataWithErrors": true,
-      "migrateLegacyCaches": true,
-      "showLastGoodPortfolioOnRateLimit": true
     }
   },
   "activeSBrokerPositions": [

@@ -1,7 +1,11 @@
-# Depot-Cockpit Release 4.2
+# Depot-Cockpit Release 4.0
 
-- Lädt den letzten gültigen Marktdatenstand vor dem ersten Rendern.
-- Migriert Cache aus Release 4.1 und 3.2.3.
-- Fehlerhafte API-Antworten überschreiben keine funktionierenden Altwerte.
-- Bei EODHD 402 bleiben Depotwert, Positionen, Charts und Performance sichtbar.
-- Ein leerer Zustand erscheint nur, wenn noch nie gültige Kursdaten gespeichert wurden.
+## Korrekturen
+- Release-Bezeichnung von versehentlich 0.4 auf 4.0 berichtigt.
+- Darstellung der Zeiträume Tag, Woche, Monat, 3 Monate und 1 Jahr neu geordnet.
+- Fehlende 1-Jahres-Daten werden jetzt als klarer Hinweis angezeigt und nicht mehr als zusammenlaufende Zeichenfolge.
+- Performance-Karten sind auf Desktop, iPhone und schmalen Displays responsiv.
+- Bestehendes Premium-Light-Design und die mittige Navigation bleiben erhalten.
+
+## Installation
+Den Ordnerinhalt vollständig in das GitHub-Projekt übernehmen und als Production Deployment veröffentlichen.
