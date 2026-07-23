@@ -1,14 +1,11 @@
-# Depot-Cockpit – Stabilitätsbasis korrigiert
+# Depot-Cockpit – Stabilitätsbasis Timeout-Fix
 
-## Ursache des leeren Starts
+Behoben wurde der endlose Ladezustand beim Kursabruf.
 
-Die vorherige Stabilitätsbasis hatte den automatischen Kursabruf vollständig abgeschaltet. Auf einer Installation ohne bereits gespeicherten Kursstand konnte deshalb nur ein leerer Zustand erscheinen. Zusätzlich hing die App von einer separat geladenen `market-core.js` ab.
-
-## Korrektur
-
-- `MarketCore` ist direkt in `app.js` integriert.
-- Mit gültigem Cache erscheint der letzte Kursstand sofort und es gibt keinen automatischen Abruf.
-- Ohne gültigen Cache erfolgt nach erfolgreicher Schlüsselprüfung genau ein kontrollierter Erstabruf.
-- Der ↻-Button startet jederzeit eine bewusste Aktualisierung.
-- Während des Abrufs erscheint eine sichtbare Statusmeldung.
-- Fehler löschen weiterhin keine vorhandenen Werte.
+- Browser bricht nach 30 Sekunden kontrolliert ab.
+- Jede EODHD-Anfrage endet nach spätestens 5,5 Sekunden.
+- Die Serverfunktion hat insgesamt höchstens 24 Sekunden Zeit.
+- Alle Positionen werden parallel bearbeitet, statt nacheinander minutenlang zu blockieren.
+- Pro Position werden maximal zwei Symbolkandidaten geprüft.
+- Der Ladezustand endet immer mit Daten oder einer sichtbaren Fehlermeldung.
+- Vorhandene Werte bleiben bei Fehlern erhalten.

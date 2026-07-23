@@ -1,5 +1,5 @@
 {
-  "version": "stability-base-fixed",
+  "version": "stability-timeout-fix",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -83,6 +83,13 @@
       "withoutValidCache": "one controlled bootstrap request after health check",
       "manualRefresh": true,
       "marketCoreBundledIntoApp": true
+    },
+    "timeouts": {
+      "browserRequestSeconds": 30,
+      "eodhdRequestSeconds": 5.5,
+      "serverTotalBudgetSeconds": 24,
+      "maxCandidatesPerPosition": 2,
+      "loadingStateAlwaysEnds": true
     }
   },
   "activeSBrokerPositions": [

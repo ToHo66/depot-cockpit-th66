@@ -38,6 +38,7 @@ const MarketCore=(()=>{
     const text=String(message||'');
     if(/402|daily API requests limit|rate.?limit/i.test(text))return 'Tägliches Kursdaten-Limit erreicht.';
     if(/API_KEY_MISSING|Schlüssel fehlt/i.test(text))return 'EODHD-Schlüssel fehlt.';
+    if(/30 Sekunden|CLIENT_TIMEOUT|Zeitüberschreitung/i.test(text))return 'Zeitüberschreitung beim Kursdatenabruf.';
     return text||'Kursdaten konnten nicht aktualisiert werden.'
   }
   return {isValidItem,sanitize,mergeLastGood,chooseSnapshot,friendlyError}
@@ -85,7 +86,7 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='STABILITÄTSBASIS KORRIGIERT';
+const APP_VERSION='STABILITÄTSBASIS TIMEOUT-FIX';
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
 const STORE='th66-professional-master-v3';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
@@ -480,12 +481,31 @@ async function refresh({manual=false,bootstrap=false}={}){
     const positions=state.positions
       .filter(p=>p.dataSource==='EODHD')
       .map(p=>({...p,brokerVenue:p.analysisVenue,analysisVenue:p.analysisVenue,candidates:venueCandidates(p)}));
-    const r=await fetch('/api/market-data',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({positions})
-    });
-    const x=await r.json();
+    const controller=new AbortController();
+    const clientTimeout=setTimeout(()=>controller.abort(),30000);
+    let r;
+    try{
+      r=await fetch('/api/market-data',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({positions}),
+        signal:controller.signal
+      });
+    }catch(error){
+      if(error?.name==='AbortError'){
+        throw Object.assign(new Error('Der Kursdaten-Server hat nicht innerhalb von 30 Sekunden geantwortet.'),{code:'CLIENT_TIMEOUT'})
+      }
+      throw error
+    }finally{
+      clearTimeout(clientTimeout)
+    }
+    const responseText=await r.text();
+    let x;
+    try{
+      x=JSON.parse(responseText)
+    }catch{
+      throw new Error(`Ungültige Serverantwort (${r.status}).`)
+    }
     if(!r.ok||!x.ok)throw Object.assign(new Error(x.error||'Datenabruf fehlgeschlagen'),{code:x.code});
     const merged=MarketCore.mergeLastGood(previous,x.results);
     state.data=merged.data;
@@ -509,7 +529,12 @@ async function refresh({manual=false,bootstrap=false}={}){
       :`<b>Keine Aktualisierung möglich.</b><br>${friendlyMarketError(e.message)} Es ist noch kein gültiger Kursstand gespeichert.`;
     toast(hadPrevious?'Letzter gültiger Stand bleibt aktiv':'Keine Kursdaten verfügbar')
   }finally{
-    b.disabled=false;b.textContent='↻'
+    b.disabled=false;b.textContent='↻';
+    const status=$('#setupBanner');
+    if(status&&/Kursdaten werden abgerufen/.test(status.textContent||'')){
+      status.classList.remove('hidden');
+      status.innerHTML='<b>Abruf beendet.</b><br>Es wurden keine verwertbaren Kursdaten geliefert. Bitte Diagnose unter Einstellungen öffnen.';
+    }
   }
 }
 function showPage(page){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));$$('.page').forEach(x=>x.classList.remove('active'));$('#'+page)?.classList.add('active');scrollTo({top:0,behavior:'smooth'})}
