@@ -1,5 +1,5 @@
 {
-  "version": "stability-timeout-fix",
+  "version": "wiederherstellung",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -68,28 +68,6 @@
       "defaultBrokerReference": null,
       "previewRedirect": true,
       "diagnosticsLocation": "Einstellungen > Hilfe & Diagnose"
-    },
-    "stabilityArchitecture": {
-      "goldenMaster": "Release 4.0 visual and functional base",
-      "automaticMarketRequests": false,
-      "lastGoodSnapshotInsideMainBackup": true,
-      "separateLegacyMarketCache": true,
-      "apiErrorsNeverDeleteGoodData": true,
-      "manualBrokerPricesIndependentFromEODHD": true,
-      "automatedTests": 9
-    },
-    "startupPolicy": {
-      "withValidCache": "show cache immediately, no automatic request",
-      "withoutValidCache": "one controlled bootstrap request after health check",
-      "manualRefresh": true,
-      "marketCoreBundledIntoApp": true
-    },
-    "timeouts": {
-      "browserRequestSeconds": 30,
-      "eodhdRequestSeconds": 5.5,
-      "serverTotalBudgetSeconds": 24,
-      "maxCandidatesPerPosition": 2,
-      "loadingStateAlwaysEnds": true
     }
   },
   "activeSBrokerPositions": [
@@ -215,5 +193,6 @@
       "Keine automatische Umleitung von Vorschauadressen",
       "Bestehende Depot-, Speicher- und Kurslogik unverändert übernommen"
     ]
-  }
+  },
+  "recoveryNote": "Unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand. Keine spätere Cache-, Timeout- oder Startlogik enthalten."
 }

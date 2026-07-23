@@ -1,11 +1,12 @@
-# Depot-Cockpit – Stabilitätsbasis Timeout-Fix
+# Depot-Cockpit – Wiederherstellung
 
-Behoben wurde der endlose Ladezustand beim Kursabruf.
+Dieses Paket ist eine unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand.
 
-- Browser bricht nach 30 Sekunden kontrolliert ab.
-- Jede EODHD-Anfrage endet nach spätestens 5,5 Sekunden.
-- Die Serverfunktion hat insgesamt höchstens 24 Sekunden Zeit.
-- Alle Positionen werden parallel bearbeitet, statt nacheinander minutenlang zu blockieren.
-- Pro Position werden maximal zwei Symbolkandidaten geprüft.
-- Der Ladezustand endet immer mit Daten oder einer sichtbaren Fehlermeldung.
-- Vorhandene Werte bleiben bei Fehlern erhalten.
+Nicht enthalten sind die späteren Änderungen an:
+- Cache-Migration
+- automatischer Startlogik
+- Timeout-Steuerung
+- Diagnoseinstrumentierung
+- parallelen API-Aufrufen
+
+Geändert wurde ausschließlich die sichtbare Kennzeichnung „WIEDERHERSTELLUNG“ und der Cache-Buster der statischen Dateien.

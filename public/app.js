@@ -1,49 +1,3 @@
-
-const MarketCore=(()=>{
-  function isValidItem(item){
-    return Boolean(item&&item.ok&&item.latest&&Number.isFinite(Number(item.latest.price))&&Number(item.latest.price)>0)
-  }
-  function sanitize(data){
-    const out={};
-    if(!data||typeof data!=='object')return out;
-    for(const [id,item] of Object.entries(data)){
-      if(isValidItem(item))out[id]={...item,cached:true}
-    }
-    return out
-  }
-  function mergeLastGood(previous,results){
-    const merged={...sanitize(previous)};
-    let successes=0;
-    for(const item of Array.isArray(results)?results:[]){
-      if(item&&item.id&&isValidItem(item)){
-        merged[item.id]={...item,cached:Boolean(item.cached)};
-        successes++
-      }
-    }
-    return {data:merged,successes}
-  }
-  function chooseSnapshot(snapshots,maxAgeMs,now=Date.now()){
-    const valid=(Array.isArray(snapshots)?snapshots:[])
-      .filter(Boolean)
-      .map(s=>({...s,data:sanitize(s.data)}))
-      .filter(s=>Object.keys(s.data).length>0)
-      .filter(s=>{
-        const t=new Date(s.savedAt||s.updatedAt||0).getTime();
-        return Number.isFinite(t)&&t>0&&now-t<=maxAgeMs
-      })
-      .sort((a,b)=>new Date(b.savedAt||b.updatedAt)-new Date(a.savedAt||a.updatedAt));
-    return valid[0]||null
-  }
-  function friendlyError(message){
-    const text=String(message||'');
-    if(/402|daily API requests limit|rate.?limit/i.test(text))return 'Tägliches Kursdaten-Limit erreicht.';
-    if(/API_KEY_MISSING|Schlüssel fehlt/i.test(text))return 'EODHD-Schlüssel fehlt.';
-    if(/30 Sekunden|CLIENT_TIMEOUT|Zeitüberschreitung/i.test(text))return 'Zeitüberschreitung beim Kursdatenabruf.';
-    return text||'Kursdaten konnten nicht aktualisiert werden.'
-  }
-  return {isValidItem,sanitize,mergeLastGood,chooseSnapshot,friendlyError}
-})();
-
 const VENUES=['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt','Société Générale','Euronext Paris','Euronext Amsterdam','Nasdaq','NYSE','Direkthandel','Manuell'];
 const EODHD_VENUE_CODES={'Xetra':'XETRA','Frankfurt':'F','Stuttgart':'STU','Euronext Paris':'PA','Euronext Amsterdam':'AS','Nasdaq':'US','NYSE':'US'};
 const EODHD_SUPPORTED_VENUES=Object.keys(EODHD_VENUE_CODES);
@@ -86,13 +40,13 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='STABILITÄTSBASIS TIMEOUT-FIX';
+const APP_VERSION='WIEDERHERSTELLUNG';
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
 const STORE='th66-professional-master-v3';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
-const MARKET_CACHE='th66-professional-market-cache-stable-v1';
+const MARKET_CACHE='th66-professional-market-cache-v323';
 DEFAULT_POSITIONS.forEach(normalizePosition);
-const state={positions:structuredClone(DEFAULT_POSITIONS),archive:[],transactions:[],data:{},marketSnapshot:null,settings:{sbrokerReference:null,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']},updatedAt:null};
+const state={positions:structuredClone(DEFAULT_POSITIONS),archive:[],transactions:[],data:{},settings:{sbrokerReference:null,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']},updatedAt:null};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function parseNum(v){if(v==null||v==='')return null;const t=String(v).trim().replace(/\s/g,'');const normalized=t.includes(',')?t.replace(/\./g,'').replace(',','.'):t;const n=Number(normalized);return Number.isFinite(n)?n:null}
 function eur(v,d=2){return Number.isFinite(v)?new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',minimumFractionDigits:d,maximumFractionDigits:d}).format(v):'–'}
@@ -106,8 +60,7 @@ function snapshot(){
     positions:state.positions,
     archive:state.archive,
     transactions:state.transactions,
-    settings:state.settings,
-    marketSnapshot:state.marketSnapshot
+    settings:state.settings
   }
 }
 function save(){
@@ -135,11 +88,6 @@ function load(){
     if(Array.isArray(x.positions)&&x.positions.length)state.positions=x.positions.map(normalizePosition);
     if(Array.isArray(x.archive))state.archive=x.archive;
     if(Array.isArray(x.transactions))state.transactions=x.transactions;
-    if(x.marketSnapshot&&x.marketSnapshot.data){
-      state.marketSnapshot=x.marketSnapshot;
-      state.data={...state.data,...MarketCore.sanitize(x.marketSnapshot.data)};
-      state.updatedAt=x.marketSnapshot.updatedAt||x.marketSnapshot.savedAt||null
-    }
     if(x.settings){
       const sb=Number(x.settings.sbrokerReference);
       const tr=Number(x.settings.trReference);
@@ -164,49 +112,9 @@ function appEodValue(p){const price=marketPrice(p);return Number.isFinite(price)
 function valuationPrice(p){const manual=brokerPrice(p);return Number.isFinite(manual)?manual:marketPrice(p)}
 function positionValue(p){const price=valuationPrice(p);return Number.isFinite(price)?price*p.qty:null}
 function brokerTotal(name){const values=state.positions.filter(p=>p.broker===name).map(positionValue).filter(Number.isFinite);return values.length?values.reduce((a,b)=>a+b,0):null}
-function persistLastGoodMarketData(){
-  const cleaned=MarketCore.sanitize(state.data);
-  if(!Object.keys(cleaned).length)return false;
-  const savedAt=new Date().toISOString();
-  state.marketSnapshot={
-    schemaVersion:1,
-    savedAt,
-    updatedAt:state.updatedAt||savedAt,
-    data:cleaned
-  };
-  try{
-    localStorage.setItem(MARKET_CACHE,JSON.stringify(state.marketSnapshot));
-    save();
-    return true
-  }catch(error){
-    console.error('Marktdaten konnten nicht gespeichert werden',error);
-    return false
-  }
-}
-function loadMarketCache(){
-  const candidates=[];
-  if(state.marketSnapshot)candidates.push(state.marketSnapshot);
-  try{
-    const current=JSON.parse(localStorage.getItem(MARKET_CACHE)||'null');
-    if(current)candidates.push(current);
-    for(const key of ['th66-professional-market-cache-v42','th66-professional-market-cache-v41','th66-professional-market-cache-v323']){
-      const old=JSON.parse(localStorage.getItem(key)||'null');
-      if(old)candidates.push(old)
-    }
-  }catch{}
-  const best=MarketCore.chooseSnapshot(candidates,90*24*60*60*1000);
-  if(!best)return false;
-  state.marketSnapshot=best;
-  state.data={...state.data,...MarketCore.sanitize(best.data)};
-  state.updatedAt=best.updatedAt||best.savedAt||null;
-  return true
-}
-function hasLastGoodMarketData(){
-  return Object.keys(MarketCore.sanitize(state.data)).length>0
-}
-function friendlyMarketError(message){
-  return MarketCore.friendlyError(message)
-}
+function saveMarketCache(){try{localStorage.setItem(MARKET_CACHE,JSON.stringify({savedAt:new Date().toISOString(),updatedAt:state.updatedAt,data:state.data}))}catch{}}
+function loadMarketCache(){try{const x=JSON.parse(localStorage.getItem(MARKET_CACHE)||'null');if(!x?.savedAt||!x?.data)return;const age=Date.now()-new Date(x.savedAt).getTime();if(age<24*60*60*1000){state.data=x.data;state.updatedAt=x.updatedAt||x.savedAt}}catch{}}
+function marketDayContribution(p){const d=state.data[p.id];const latest=d?.latest?.price,previous=d?.performance?.day?.basePrice;if(!d?.ok||!Number.isFinite(latest)||!Number.isFinite(previous))return null;return (latest-previous)*p.qty}
 function chartSvg(points){if(!points?.length||points.length<2)return '<div class="chart-empty">Keine zusammenhängende Historie verfügbar</div>';const vals=points.map(x=>x.close),min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,w=600,h=150,pad=10;const coords=points.map((x,i)=>`${pad+(i/(points.length-1))*(w-2*pad)},${h-pad-((x.close-min)/range)*(h-2*pad)}`).join(' ');return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Kurschart"><polyline points="${coords}" fill="none" stroke="#2d63e2" stroke-width="4" vector-effect="non-scaling-stroke"/><line x1="10" y1="${h-10}" x2="${w-10}" y2="${h-10}" stroke="#dce4ee"/></svg>`}
 function venueOptions(selected){return VENUES.map(v=>`<option ${v===selected?'selected':''}>${v}</option>`).join('')}
 
@@ -321,8 +229,6 @@ function renderDiagnostics(){
     <span>Summe S-Broker-Positionen<b>${eur(calculated.length?calculatedSum:null)}</b></span>
     <span>Bewertete Positionen<b>${calculated.length}/${sBrokerPositions.length}</b></span>
     <span>Kursdaten geladen<b>${Object.values(state.data).filter(x=>x?.ok).length}/${state.positions.length}</b></span>
-    <span>Letzter gültiger Rückfallstand<b>${state.marketSnapshot?.savedAt?new Date(state.marketSnapshot.savedAt).toLocaleString('de-DE'):'nicht vorhanden'}</b></span>
-    <span>Automatische EODHD-Abfrage<b>Nein</b></span>
     <span>Alte Speicher auf dieser Adresse<b>${oldKeys.length?oldKeys.join(', '):'keine'}</b></span>
   </div>
   <p class="diagnostic-note">Nur zur Fehlersuche. Vorschauadressen werden automatisch auf die feste Produktionsadresse umgeleitet, damit Eingaben erhalten bleiben.</p>`
@@ -330,8 +236,8 @@ function renderDiagnostics(){
 
 function renderOverviewPositions(){const box=$('#overviewPositions');if(!box)return;const rows=state.positions.map(p=>({p,value:positionValue(p),pct:state.data[p.id]?.performance?.day?.pct})).sort((a,b)=>(b.value||0)-(a.value||0)).slice(0,5);box.innerHTML=rows.map(x=>`<div class="compact-position"><div><b>${x.p.name}</b><small>${x.p.qty.toLocaleString('de-DE')} Stück · ${x.p.broker}</small></div><div class="value-col"><b>${eur(x.value)}</b><small class="${cls(x.pct)}">${pc(x.pct)}</small></div></div>`).join('')}
 function renderMarketToday(){const rows=state.positions.map(p=>({p,v:marketDayContribution(p),pct:state.data[p.id]?.performance?.day?.pct})).filter(x=>Number.isFinite(x.v)).sort((a,b)=>b.v-a.v);if(!rows.length){$('#marketToday').innerHTML='<p class="muted">Nach der ersten Aktualisierung verfügbar.</p>';return}const top=rows.slice(0,2),bottom=[...rows].sort((a,b)=>a.v-b.v).slice(0,2);$('#marketToday').innerHTML=[...top,...bottom].map(x=>`<div class="market-row"><div><b>${x.p.name}</b><small class="muted">${pc(x.pct)}</small></div><strong class="${cls(x.v)}">${eur(x.v)}</strong></div>`).join('')}
-function renderPositions(){$('#positionList').innerHTML=['sBroker','Trade Republic'].map(broker=>{const ps=state.positions.filter(p=>p.broker===broker);if(!ps.length)return '';return `<h3 class="broker-title">${broker}</h3>`+ps.map(p=>{const d=state.data[p.id],manual=brokerPrice(p),price=valuationPrice(p),val=positionValue(p),perf=d?.performance||{},status=d?.ok?'ok':Number.isFinite(manual)?'warn':d?'error':'warn',statusText=d?.ok?(Number.isFinite(manual)?'Brokerkurs + EOD-Historie':'EODHD geladen'):Number.isFinite(manual)?'Nur Brokerkurs':friendlyMarketError(d?.error)||'Noch nicht geladen';return `<article class="position-card"><div class="position-summary"><div><h3>${p.name}</h3><p>${p.qty.toLocaleString('de-DE')} Stück · ${p.isin}${p.wkn?` · ${p.wkn}`:''}</p><span class="badge ${status}">${statusText}</span></div><div class="price"><strong>${eur(price,price<20?3:2)}</strong><small>${eur(val)}</small></div></div><div class="position-details"><div class="meta-grid"><div class="meta-box"><span>Broker</span><strong>${p.broker}</strong></div><div class="meta-box"><span>Broker-Anzeigequelle</span><strong>${p.brokerDisplaySource||'–'}</strong></div><div class="meta-box"><span>Feste Analysebörse</span><strong>${p.analysisVenue||'–'}</strong></div><div class="meta-box"><span>Alternativen / Datenquelle</span><strong>${(p.fallbackVenues||[]).join(' → ')||'–'}<br>${p.dataSource}${p.marketSymbol?` · ${p.marketSymbol}`:''}</strong></div></div><div class="perf-grid">${[['Tag',perf.day],['Woche',perf.week],['Monat',perf.month],['3 Monate',perf.threeMonths],['1 Jahr',perf.year]].map(([n,x])=>{const available=Number.isFinite(x?.pct)&&Number.isFinite(x?.basePrice)&&x?.baseDate;return `<div class="perf-box${available?'':' unavailable'}"><span>${n}</span>${available?`<strong class="${cls(x.pct)}">${pc(x.pct)}</strong><small>${x.baseDate} · ${eur(x.basePrice,3)}</small>`:`<strong>–</strong><small>${n==='1 Jahr'?'Noch keine vollständigen 1-Jahres-Daten':'Keine Daten verfügbar'}</small>`}</div>`}).join('')}</div><div class="chart-wrap">${chartSvg(d?.chart)}</div><div class="source">${d?.source||friendlyMarketError(d?.error)||'Noch keine Marktdaten'}${d?.latest?`<br>Letzter EOD-Kurs: ${d.latest.date}`:''}${Number.isFinite(manual)?`<br>Aktuelle Bewertung mit Brokerkurs: ${eur(manual,3)}`:''}${Number.isFinite(p.purchasePrice)?`<br>Kaufkurs: ${eur(p.purchasePrice,3)} · Gewinn/Verlust ${pc((price/p.purchasePrice-1)*100)}`:''}</div></div></article>`}).join('')}).join('');$$('.position-summary').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'))}
-function renderAnalysis(){const rows=state.positions.map(p=>({p,v:marketDayContribution(p)})).filter(x=>Number.isFinite(x.v)).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));$('#contributors').innerHTML=rows.length?rows.map(x=>`<div class="market-row"><div><b>${x.p.name}</b><small class="muted">EOD-Tagesbeitrag · Schlusskurs gegen Vortag</small></div><strong class="${cls(x.v)}">${eur(x.v)}</strong></div>`).join(''):'<p class="muted">Nach der ersten Aktualisierung verfügbar.</p>';$('#diagnostics').innerHTML=state.positions.map(p=>{const d=state.data[p.id],manual=brokerPrice(p),latest=d?.latest?.price,prev=d?.performance?.day?.basePrice,appPrice=valuationPrice(p),delta=Number.isFinite(manual)&&Number.isFinite(latest)?manual-latest:null;let status=d?.ok?'EOD geladen':Number.isFinite(manual)?'Nur Brokerkurs':friendlyMarketError(d?.error)||'Noch nicht geladen';let klass=d?.ok?'positive':d?.error?'negative':'warn';return `<div class="diagnostic-card"><div class="diag-title"><div><b>${p.name}</b><small>${p.qty.toLocaleString('de-DE')} Stück · ${p.broker}</small></div><strong class="${klass}">${status}</strong></div><div class="diag-grid"><span>Broker-Anzeigequelle (Info)<b>${p.brokerDisplaySource||'–'}</b></span><span>Feste Analysebörse<b>${p.analysisVenue||'–'}</b></span><span>Tatsächlich verwendete Analysebörse<b>${d?.usedVenue||'–'}</b></span><span>Tatsächliche EODHD-Reihe<b>${d?.symbol||p.marketSymbol||'–'}</b></span><span>Kursdatum<b>${d?.latest?.date||'–'}</b></span><span>EOD-Schlusskurs<b>${eur(latest,3)}</b></span><span>Vortagesschluss<b>${eur(prev,3)}</b></span><span>EOD-Tagesänderung<b class="${cls(d?.performance?.day?.pct)}">${pc(d?.performance?.day?.pct)}</b></span><span>Bewertungskurs der App<b>${eur(appPrice,3)}</b></span><span>Manueller Brokerkurs<b>${eur(manual,3)}</b></span><span>Differenz Broker/EOD<b class="${cls(delta)}">${eur(delta,3)}</b></span><span>Tagesbeitrag EOD<b class="${cls(marketDayContribution(p))}">${eur(marketDayContribution(p))}</b></span></div><p class="diagnostic-note">${d?.venueWarning||'Der Handelsplatz steuert den Abruf automatisch. Unterstützt sind Xetra, Frankfurt, Stuttgart, Euronext Paris/Amsterdam und US. Tradegate, gettex sowie Lang & Schwarz benötigen weiterhin einen manuellen Brokerkurs.'}</p></div>`}).join('')}
+function renderPositions(){$('#positionList').innerHTML=['sBroker','Trade Republic'].map(broker=>{const ps=state.positions.filter(p=>p.broker===broker);if(!ps.length)return '';return `<h3 class="broker-title">${broker}</h3>`+ps.map(p=>{const d=state.data[p.id],manual=brokerPrice(p),price=valuationPrice(p),val=positionValue(p),perf=d?.performance||{},status=d?.ok?'ok':Number.isFinite(manual)?'warn':d?'error':'warn',statusText=d?.ok?(Number.isFinite(manual)?'Brokerkurs + EOD-Historie':'EODHD geladen'):Number.isFinite(manual)?'Nur Brokerkurs':d?.error||'Noch nicht geladen';return `<article class="position-card"><div class="position-summary"><div><h3>${p.name}</h3><p>${p.qty.toLocaleString('de-DE')} Stück · ${p.isin}${p.wkn?` · ${p.wkn}`:''}</p><span class="badge ${status}">${statusText}</span></div><div class="price"><strong>${eur(price,price<20?3:2)}</strong><small>${eur(val)}</small></div></div><div class="position-details"><div class="meta-grid"><div class="meta-box"><span>Broker</span><strong>${p.broker}</strong></div><div class="meta-box"><span>Broker-Anzeigequelle</span><strong>${p.brokerDisplaySource||'–'}</strong></div><div class="meta-box"><span>Feste Analysebörse</span><strong>${p.analysisVenue||'–'}</strong></div><div class="meta-box"><span>Alternativen / Datenquelle</span><strong>${(p.fallbackVenues||[]).join(' → ')||'–'}<br>${p.dataSource}${p.marketSymbol?` · ${p.marketSymbol}`:''}</strong></div></div><div class="perf-grid">${[['Tag',perf.day],['Woche',perf.week],['Monat',perf.month],['3 Monate',perf.threeMonths],['1 Jahr',perf.year]].map(([n,x])=>{const available=Number.isFinite(x?.pct)&&Number.isFinite(x?.basePrice)&&x?.baseDate;return `<div class="perf-box${available?'':' unavailable'}"><span>${n}</span>${available?`<strong class="${cls(x.pct)}">${pc(x.pct)}</strong><small>${x.baseDate} · ${eur(x.basePrice,3)}</small>`:`<strong>–</strong><small>${n==='1 Jahr'?'Noch keine vollständigen 1-Jahres-Daten':'Keine Daten verfügbar'}</small>`}</div>`}).join('')}</div><div class="chart-wrap">${chartSvg(d?.chart)}</div><div class="source">${d?.source||d?.error||'Noch keine Marktdaten'}${d?.latest?`<br>Letzter EOD-Kurs: ${d.latest.date}`:''}${Number.isFinite(manual)?`<br>Aktuelle Bewertung mit Brokerkurs: ${eur(manual,3)}`:''}${Number.isFinite(p.purchasePrice)?`<br>Kaufkurs: ${eur(p.purchasePrice,3)} · Gewinn/Verlust ${pc((price/p.purchasePrice-1)*100)}`:''}</div></div></article>`}).join('')}).join('');$$('.position-summary').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'))}
+function renderAnalysis(){const rows=state.positions.map(p=>({p,v:marketDayContribution(p)})).filter(x=>Number.isFinite(x.v)).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));$('#contributors').innerHTML=rows.length?rows.map(x=>`<div class="market-row"><div><b>${x.p.name}</b><small class="muted">EOD-Tagesbeitrag · Schlusskurs gegen Vortag</small></div><strong class="${cls(x.v)}">${eur(x.v)}</strong></div>`).join(''):'<p class="muted">Nach der ersten Aktualisierung verfügbar.</p>';$('#diagnostics').innerHTML=state.positions.map(p=>{const d=state.data[p.id],manual=brokerPrice(p),latest=d?.latest?.price,prev=d?.performance?.day?.basePrice,appPrice=valuationPrice(p),delta=Number.isFinite(manual)&&Number.isFinite(latest)?manual-latest:null;let status=d?.ok?'EOD geladen':Number.isFinite(manual)?'Nur Brokerkurs':d?.error||'Noch nicht geladen';let klass=d?.ok?'positive':d?.error?'negative':'warn';return `<div class="diagnostic-card"><div class="diag-title"><div><b>${p.name}</b><small>${p.qty.toLocaleString('de-DE')} Stück · ${p.broker}</small></div><strong class="${klass}">${status}</strong></div><div class="diag-grid"><span>Broker-Anzeigequelle (Info)<b>${p.brokerDisplaySource||'–'}</b></span><span>Feste Analysebörse<b>${p.analysisVenue||'–'}</b></span><span>Tatsächlich verwendete Analysebörse<b>${d?.usedVenue||'–'}</b></span><span>Tatsächliche EODHD-Reihe<b>${d?.symbol||p.marketSymbol||'–'}</b></span><span>Kursdatum<b>${d?.latest?.date||'–'}</b></span><span>EOD-Schlusskurs<b>${eur(latest,3)}</b></span><span>Vortagesschluss<b>${eur(prev,3)}</b></span><span>EOD-Tagesänderung<b class="${cls(d?.performance?.day?.pct)}">${pc(d?.performance?.day?.pct)}</b></span><span>Bewertungskurs der App<b>${eur(appPrice,3)}</b></span><span>Manueller Brokerkurs<b>${eur(manual,3)}</b></span><span>Differenz Broker/EOD<b class="${cls(delta)}">${eur(delta,3)}</b></span><span>Tagesbeitrag EOD<b class="${cls(marketDayContribution(p))}">${eur(marketDayContribution(p))}</b></span></div><p class="diagnostic-note">${d?.venueWarning||'Der Handelsplatz steuert den Abruf automatisch. Unterstützt sind Xetra, Frankfurt, Stuttgart, Euronext Paris/Amsterdam und US. Tradegate, gettex sowie Lang & Schwarz benötigen weiterhin einen manuellen Brokerkurs.'}</p></div>`}).join('')}
 
 
 function positionPriority(p){
@@ -468,105 +374,12 @@ function recordTransaction(){
  }
  state.transactions.push({id:uid(),type,date,positionId:id,name:p.name,isin:p.isin,qty,price,fees,venue,realized,createdAt:new Date().toISOString()});save();render();toast(type==='BUY'?'Kauf erfasst':'Verkauf erfasst')
 }
-async function refresh({manual=false,bootstrap=false}={}){
-  if(!manual&&!bootstrap)return;
-  const b=$('#refreshBtn');
-  const previous={...state.data};
-  const hadPrevious=hasLastGoodMarketData();
-  b.disabled=true;b.textContent='…';
-  const progress=$('#setupBanner');
-  progress.classList.remove('hidden');
-  progress.innerHTML='<b>Kursdaten werden abgerufen …</b><br>Vorhandene Werte bleiben währenddessen erhalten.';
-  try{
-    const positions=state.positions
-      .filter(p=>p.dataSource==='EODHD')
-      .map(p=>({...p,brokerVenue:p.analysisVenue,analysisVenue:p.analysisVenue,candidates:venueCandidates(p)}));
-    const controller=new AbortController();
-    const clientTimeout=setTimeout(()=>controller.abort(),30000);
-    let r;
-    try{
-      r=await fetch('/api/market-data',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({positions}),
-        signal:controller.signal
-      });
-    }catch(error){
-      if(error?.name==='AbortError'){
-        throw Object.assign(new Error('Der Kursdaten-Server hat nicht innerhalb von 30 Sekunden geantwortet.'),{code:'CLIENT_TIMEOUT'})
-      }
-      throw error
-    }finally{
-      clearTimeout(clientTimeout)
-    }
-    const responseText=await r.text();
-    let x;
-    try{
-      x=JSON.parse(responseText)
-    }catch{
-      throw new Error(`Ungültige Serverantwort (${r.status}).`)
-    }
-    if(!r.ok||!x.ok)throw Object.assign(new Error(x.error||'Datenabruf fehlgeschlagen'),{code:x.code});
-    const merged=MarketCore.mergeLastGood(previous,x.results);
-    state.data=merged.data;
-    if(merged.successes>0){
-      state.updatedAt=x.generatedAt||new Date().toISOString();
-      persistLastGoodMarketData()
-    }
-    render();
-    const failed=(x.results||[]).length-merged.successes;
-    if(failed>0){
-      const ban=$('#setupBanner');ban.classList.remove('hidden');
-      ban.innerHTML=`<b>${merged.successes} Kursreihen aktualisiert, ${failed} nicht.</b><br>Vorhandene letzte Werte wurden nicht gelöscht.`;
-    }
-    toast(merged.successes?`${merged.successes} Kursreihen aktualisiert`:'Keine neuen Kursdaten')
-  }catch(e){
-    state.data=previous;
-    render();
-    const ban=$('#setupBanner');ban.classList.remove('hidden');
-    ban.innerHTML=hadPrevious
-      ?`<b>Keine Aktualisierung möglich.</b><br>${friendlyMarketError(e.message)} Der letzte gültige Depotstand bleibt sichtbar.`
-      :`<b>Keine Aktualisierung möglich.</b><br>${friendlyMarketError(e.message)} Es ist noch kein gültiger Kursstand gespeichert.`;
-    toast(hadPrevious?'Letzter gültiger Stand bleibt aktiv':'Keine Kursdaten verfügbar')
-  }finally{
-    b.disabled=false;b.textContent='↻';
-    const status=$('#setupBanner');
-    if(status&&/Kursdaten werden abgerufen/.test(status.textContent||'')){
-      status.classList.remove('hidden');
-      status.innerHTML='<b>Abruf beendet.</b><br>Es wurden keine verwertbaren Kursdaten geliefert. Bitte Diagnose unter Einstellungen öffnen.';
-    }
-  }
-}
+async function refresh(){const b=$('#refreshBtn');b.disabled=true;b.textContent='…';$('#setupBanner').classList.add('hidden');try{const positions=state.positions.filter(p=>p.dataSource==='EODHD').map(p=>({...p,brokerVenue:p.analysisVenue,analysisVenue:p.analysisVenue,candidates:venueCandidates(p)}));const r=await fetch('/api/market-data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({positions})});const x=await r.json();if(!r.ok||!x.ok)throw Object.assign(new Error(x.error||'Datenabruf fehlgeschlagen'),{code:x.code});state.data=Object.fromEntries(x.results.map(y=>[y.id,y]));state.updatedAt=x.generatedAt;saveMarketCache();render();toast('Marktdaten aktualisiert')}catch(e){const ban=$('#setupBanner');ban.classList.remove('hidden');ban.innerHTML=e.code==='API_KEY_MISSING'?'<b>EODHD-Schlüssel fehlt.</b><br>Bitte in Vercel als <code>EODHD_API_KEY</code> hinterlegen.':'<b>Datenabruf fehlgeschlagen:</b><br>'+e.message;toast('Marktdaten konnten nicht geladen werden')}finally{b.disabled=false;b.textContent='↻'}}
 function showPage(page){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));$$('.page').forEach(x=>x.classList.remove('active'));$('#'+page)?.classList.add('active');scrollTo({top:0,behavior:'smooth'})}
-function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=()=>refresh({manual:true});$('#saveCourseManager').onclick=saveCourseManager;$('#testCourseManager').onclick=()=>{saveCourseManager();toast('Zuordnungen gespeichert. Kursabruf nur über ↻.');showPage('manage');document.querySelector('#courseManagerBlock')?.scrollIntoView({behavior:'smooth',block:'start'})};$('#recordTransaction').onclick=recordTransaction;$('#txDate').value=new Date().toISOString().slice(0,10);$('#txVenue').innerHTML=venueOptions('Tradegate');$('#expandAll').onclick=()=>{const cards=$$('.position-card'),all=cards.every(c=>c.classList.contains('open'));cards.forEach(c=>c.classList.toggle('open',!all));$('#expandAll').textContent=all?'Alle öffnen':'Alle schließen'};$('#saveReferences').onclick=()=>{const sbRef=parseNum($('#sbrokerReference').value);
+function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#saveCourseManager').onclick=saveCourseManager;$('#testCourseManager').onclick=async()=>{saveCourseManager();await refresh();showPage('manage');document.querySelector('#courseManagerBlock')?.scrollIntoView({behavior:'smooth',block:'start'})};$('#recordTransaction').onclick=recordTransaction;$('#txDate').value=new Date().toISOString().slice(0,10);$('#txVenue').innerHTML=venueOptions('Tradegate');$('#expandAll').onclick=()=>{const cards=$$('.position-card'),all=cards.every(c=>c.classList.contains('open'));cards.forEach(c=>c.classList.toggle('open',!all));$('#expandAll').textContent=all?'Alle öffnen':'Alle schließen'};$('#saveReferences').onclick=()=>{const sbRef=parseNum($('#sbrokerReference').value);
 state.settings.sbrokerReference=Number.isFinite(sbRef)&&sbRef>0?sbRef:null;
 state.settings.sbrokerReferenceUpdatedAt=Number.isFinite(sbRef)&&sbRef>0?new Date().toISOString():null;
 const trRef=parseNum($('#trReference').value);
 state.settings.trReference=Number.isFinite(trRef)&&trRef>0?trRef:null;
-state.settings.trReferenceUpdatedAt=Number.isFinite(trRef)&&trRef>0?new Date().toISOString():null;save();render();toast('Manuelle Broker-Referenzen gespeichert')};$('#saveBrokerPositionValues').onclick=()=>{$$('.broker-position-value-input').forEach(i=>{const p=state.positions.find(x=>x.id===i.dataset.id);const n=parseNum(i.value);if(Number.isFinite(n)&&p?.qty>0){state.settings.brokerPositionValues[p.id]=n;state.settings.brokerPrices[p.id]=n/p.qty}else{delete state.settings.brokerPositionValues[i.dataset.id]}});const sbVals=state.positions.filter(p=>p.broker==='sBroker').map(p=>brokerPositionValue(p)).filter(Number.isFinite);if(sbVals.length===state.positions.filter(p=>p.broker==='sBroker').length){state.settings.sbrokerReference=sbVals.reduce((a,b)=>a+b,0);state.settings.sbrokerReferenceUpdatedAt=new Date().toISOString()}save();render();toast('Broker-Positionswerte gespeichert')};$('#saveBrokerPrices').onclick=()=>{$$('.broker-input').forEach(i=>{const n=parseNum(i.value);if(Number.isFinite(n))state.settings.brokerPrices[i.dataset.id]=n;else delete state.settings.brokerPrices[i.dataset.id]});save();render();toast('Brokerkurse gespeichert')};$('#savePositionSettings').onclick=()=>{$$('.editor-card').forEach(card=>{const p=state.positions.find(x=>x.id===card.dataset.id);card.querySelectorAll('[data-field]').forEach(el=>{const f=el.dataset.field;let v=el.value;if(['qty','purchasePrice'].includes(f))v=parseNum(v);if(f==='fallbackVenues')v=String(v).split(',').map(x=>x.trim()).filter(Boolean);p[f]=v});p.venueSymbols={...(p.venueSymbols||{})};card.querySelectorAll('[data-venue-symbol]').forEach(el=>{const venue=el.dataset.venueSymbol;const value=el.value.trim();if(value)p.venueSymbols[venue]=value;else delete p.venueSymbols[venue]});p.marketSymbol=p.analysisSymbol||p.marketSymbol;normalizePosition(p)});save();render();toast('Stammdaten gespeichert')};$('#addPosition').onclick=()=>{const name=$('#newName').value.trim(),isin=$('#newIsin').value.trim().toUpperCase(),qty=parseNum($('#newQty').value);if(!name||!isin||!Number.isFinite(qty)){toast('Name, ISIN und Stückzahl fehlen');return}state.positions.push(normalizePosition({id:uid(),name,isin,wkn:$('#newWkn').value.trim().toUpperCase(),qty,purchasePrice:parseNum($('#newPurchasePrice').value),broker:$('#newBroker').value,brokerDisplaySource:$('#newVenue').value,analysisVenue:'Xetra',fallbackVenues:$('#newFallbackVenues').value.split(',').map(x=>x.trim()).filter(Boolean),dataSource:$('#newSource').value,analysisSymbol:$('#newSymbol').value.trim(),currency:'EUR'}));save();render();toast('Position hinzugefügt')};$('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({version:APP_VERSION,exportedAt:new Date().toISOString(),positions:state.positions,archive:state.archive,transactions:state.transactions,settings:state.settings,marketSnapshot:state.marketSnapshot},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`depot-cockpit-sicherung-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)};$('#importInput').onchange=async e=>{try{const x=JSON.parse(await e.target.files[0].text());if(!Array.isArray(x.positions)||!x.settings)throw new Error();state.positions=x.positions;state.archive=x.archive||[];state.transactions=x.transactions||[];state.marketSnapshot=x.marketSnapshot||state.marketSnapshot;if(state.marketSnapshot?.data){state.data=MarketCore.sanitize(state.marketSnapshot.data);state.updatedAt=state.marketSnapshot.updatedAt||state.marketSnapshot.savedAt||null}state.settings={...state.settings,...x.settings,brokerPrices:{...(x.settings.brokerPrices||{})},brokerPositionValues:{...(x.settings.brokerPositionValues||{})}};save();render();toast('Sicherung importiert')}catch{toast('Ungültige Sicherungsdatei')}};$('#resetBtn').onclick=()=>{if(confirm('Lokale Stammdaten, Brokerwerte und Archiv wirklich zurücksetzen?')){localStorage.removeItem(STORE);localStorage.removeItem(MARKET_CACHE);state.marketSnapshot=null;state.positions=structuredClone(DEFAULT_POSITIONS);state.archive=[];state.transactions=[];state.settings={sbrokerReference:null,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']};state.data={};render();toast('Lokale Daten zurückgesetzt')}}}
-load();
-const restoredMarketData=loadMarketCache();
-wire();
-render();
-
-const banner=$('#setupBanner');
-banner.classList.remove('hidden');
-
-if(restoredMarketData){
-  banner.innerHTML='<b>Letzter gültiger Kursstand geladen.</b><br>Neue Kurse werden nur über ↻ aktualisiert.';
-}else{
-  banner.innerHTML='<b>Erster Kursabruf wird vorbereitet.</b><br>Da noch kein gültiger Kursstand vorhanden ist, startet die App einmalig einen kontrollierten Abruf.';
-}
-
-fetch('/api/health').then(r=>r.json()).then(x=>{
-  if(!x.eodhdConfigured){
-    banner.innerHTML='<b>EODHD-Schlüssel fehlt.</b><br>Bitte den Schlüssel in Vercel prüfen. Depotstammdaten und manuelle Brokerkurse bleiben nutzbar.';
-    return;
-  }
-  if(!restoredMarketData){
-    refresh({bootstrap:true});
-  }
-}).catch(error=>{
-  banner.innerHTML='<b>Verbindung konnte nicht geprüft werden.</b><br>Bitte ↻ drücken, sobald die Verbindung wieder verfügbar ist.';
-});
-
+state.settings.trReferenceUpdatedAt=Number.isFinite(trRef)&&trRef>0?new Date().toISOString():null;save();render();toast('Manuelle Broker-Referenzen gespeichert')};$('#saveBrokerPositionValues').onclick=()=>{$$('.broker-position-value-input').forEach(i=>{const p=state.positions.find(x=>x.id===i.dataset.id);const n=parseNum(i.value);if(Number.isFinite(n)&&p?.qty>0){state.settings.brokerPositionValues[p.id]=n;state.settings.brokerPrices[p.id]=n/p.qty}else{delete state.settings.brokerPositionValues[i.dataset.id]}});const sbVals=state.positions.filter(p=>p.broker==='sBroker').map(p=>brokerPositionValue(p)).filter(Number.isFinite);if(sbVals.length===state.positions.filter(p=>p.broker==='sBroker').length){state.settings.sbrokerReference=sbVals.reduce((a,b)=>a+b,0);state.settings.sbrokerReferenceUpdatedAt=new Date().toISOString()}save();render();toast('Broker-Positionswerte gespeichert')};$('#saveBrokerPrices').onclick=()=>{$$('.broker-input').forEach(i=>{const n=parseNum(i.value);if(Number.isFinite(n))state.settings.brokerPrices[i.dataset.id]=n;else delete state.settings.brokerPrices[i.dataset.id]});save();render();toast('Brokerkurse gespeichert')};$('#savePositionSettings').onclick=()=>{$$('.editor-card').forEach(card=>{const p=state.positions.find(x=>x.id===card.dataset.id);card.querySelectorAll('[data-field]').forEach(el=>{const f=el.dataset.field;let v=el.value;if(['qty','purchasePrice'].includes(f))v=parseNum(v);if(f==='fallbackVenues')v=String(v).split(',').map(x=>x.trim()).filter(Boolean);p[f]=v});p.venueSymbols={...(p.venueSymbols||{})};card.querySelectorAll('[data-venue-symbol]').forEach(el=>{const venue=el.dataset.venueSymbol;const value=el.value.trim();if(value)p.venueSymbols[venue]=value;else delete p.venueSymbols[venue]});p.marketSymbol=p.analysisSymbol||p.marketSymbol;normalizePosition(p)});save();render();toast('Stammdaten gespeichert')};$('#addPosition').onclick=()=>{const name=$('#newName').value.trim(),isin=$('#newIsin').value.trim().toUpperCase(),qty=parseNum($('#newQty').value);if(!name||!isin||!Number.isFinite(qty)){toast('Name, ISIN und Stückzahl fehlen');return}state.positions.push(normalizePosition({id:uid(),name,isin,wkn:$('#newWkn').value.trim().toUpperCase(),qty,purchasePrice:parseNum($('#newPurchasePrice').value),broker:$('#newBroker').value,brokerDisplaySource:$('#newVenue').value,analysisVenue:'Xetra',fallbackVenues:$('#newFallbackVenues').value.split(',').map(x=>x.trim()).filter(Boolean),dataSource:$('#newSource').value,analysisSymbol:$('#newSymbol').value.trim(),currency:'EUR'}));save();render();toast('Position hinzugefügt')};$('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({version:APP_VERSION,exportedAt:new Date().toISOString(),positions:state.positions,archive:state.archive,transactions:state.transactions,settings:state.settings},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`depot-cockpit-sicherung-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)};$('#importInput').onchange=async e=>{try{const x=JSON.parse(await e.target.files[0].text());if(!Array.isArray(x.positions)||!x.settings)throw new Error();state.positions=x.positions;state.archive=x.archive||[];state.transactions=x.transactions||[];state.settings={...state.settings,...x.settings,brokerPrices:{...(x.settings.brokerPrices||{})},brokerPositionValues:{...(x.settings.brokerPositionValues||{})}};save();render();toast('Sicherung importiert')}catch{toast('Ungültige Sicherungsdatei')}};$('#resetBtn').onclick=()=>{if(confirm('Lokale Stammdaten, Brokerwerte und Archiv wirklich zurücksetzen?')){localStorage.removeItem(STORE);state.positions=structuredClone(DEFAULT_POSITIONS);state.archive=[];state.transactions=[];state.settings={sbrokerReference:null,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']};state.data={};render();toast('Lokale Daten zurückgesetzt')}}}
+load();loadMarketCache();wire();render();fetch('/api/health').then(r=>r.json()).then(x=>{if(!x.eodhdConfigured){const b=$('#setupBanner');b.classList.remove('hidden');b.innerHTML='<b>Depot-Cockpit Professional 3.2.3 ist aktiv.</b><br>Für EODHD-Marktdaten fehlt noch der geschützte Schlüssel in Vercel.'}else{refresh()}}).catch(()=>{});
