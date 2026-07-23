@@ -1,3 +1,48 @@
+
+const MarketCore=(()=>{
+  function isValidItem(item){
+    return Boolean(item&&item.ok&&item.latest&&Number.isFinite(Number(item.latest.price))&&Number(item.latest.price)>0)
+  }
+  function sanitize(data){
+    const out={};
+    if(!data||typeof data!=='object')return out;
+    for(const [id,item] of Object.entries(data)){
+      if(isValidItem(item))out[id]={...item,cached:true}
+    }
+    return out
+  }
+  function mergeLastGood(previous,results){
+    const merged={...sanitize(previous)};
+    let successes=0;
+    for(const item of Array.isArray(results)?results:[]){
+      if(item&&item.id&&isValidItem(item)){
+        merged[item.id]={...item,cached:Boolean(item.cached)};
+        successes++
+      }
+    }
+    return {data:merged,successes}
+  }
+  function chooseSnapshot(snapshots,maxAgeMs,now=Date.now()){
+    const valid=(Array.isArray(snapshots)?snapshots:[])
+      .filter(Boolean)
+      .map(s=>({...s,data:sanitize(s.data)}))
+      .filter(s=>Object.keys(s.data).length>0)
+      .filter(s=>{
+        const t=new Date(s.savedAt||s.updatedAt||0).getTime();
+        return Number.isFinite(t)&&t>0&&now-t<=maxAgeMs
+      })
+      .sort((a,b)=>new Date(b.savedAt||b.updatedAt)-new Date(a.savedAt||a.updatedAt));
+    return valid[0]||null
+  }
+  function friendlyError(message){
+    const text=String(message||'');
+    if(/402|daily API requests limit|rate.?limit/i.test(text))return 'Tägliches Kursdaten-Limit erreicht.';
+    if(/API_KEY_MISSING|Schlüssel fehlt/i.test(text))return 'EODHD-Schlüssel fehlt.';
+    return text||'Kursdaten konnten nicht aktualisiert werden.'
+  }
+  return {isValidItem,sanitize,mergeLastGood,chooseSnapshot,friendlyError}
+})();
+
 const VENUES=['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt','Société Générale','Euronext Paris','Euronext Amsterdam','Nasdaq','NYSE','Direkthandel','Manuell'];
 const EODHD_VENUE_CODES={'Xetra':'XETRA','Frankfurt':'F','Stuttgart':'STU','Euronext Paris':'PA','Euronext Amsterdam':'AS','Nasdaq':'US','NYSE':'US'};
 const EODHD_SUPPORTED_VENUES=Object.keys(EODHD_VENUE_CODES);
@@ -40,7 +85,7 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='STABILITÄTSBASIS';
+const APP_VERSION='STABILITÄTSBASIS KORRIGIERT';
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
 const STORE='th66-professional-master-v3';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
@@ -422,15 +467,15 @@ function recordTransaction(){
  }
  state.transactions.push({id:uid(),type,date,positionId:id,name:p.name,isin:p.isin,qty,price,fees,venue,realized,createdAt:new Date().toISOString()});save();render();toast(type==='BUY'?'Kauf erfasst':'Verkauf erfasst')
 }
-async function refresh({manual=false}={}){
-  if(!MarketCore.shouldRequest({manual})){
-    toast('Kursabruf nur über den ↻-Button');
-    return
-  }
+async function refresh({manual=false,bootstrap=false}={}){
+  if(!manual&&!bootstrap)return;
   const b=$('#refreshBtn');
   const previous={...state.data};
   const hadPrevious=hasLastGoodMarketData();
-  b.disabled=true;b.textContent='…';$('#setupBanner').classList.add('hidden');
+  b.disabled=true;b.textContent='…';
+  const progress=$('#setupBanner');
+  progress.classList.remove('hidden');
+  progress.innerHTML='<b>Kursdaten werden abgerufen …</b><br>Vorhandene Werte bleiben währenddessen erhalten.';
   try{
     const positions=state.positions
       .filter(p=>p.dataSource==='EODHD')
@@ -478,15 +523,25 @@ load();
 const restoredMarketData=loadMarketCache();
 wire();
 render();
+
 const banner=$('#setupBanner');
 banner.classList.remove('hidden');
+
 if(restoredMarketData){
-  banner.innerHTML='<b>Letzter gültiger Kursstand geladen.</b><br>Beim Öffnen erfolgt keine automatische EODHD-Abfrage. Neue Kurse nur über ↻.';
+  banner.innerHTML='<b>Letzter gültiger Kursstand geladen.</b><br>Neue Kurse werden nur über ↻ aktualisiert.';
 }else{
-  banner.innerHTML='<b>Keine automatische Kursabfrage.</b><br>Es ist noch kein gültiger Kursstand gespeichert. Neue Kurse nur über ↻.';
+  banner.innerHTML='<b>Erster Kursabruf wird vorbereitet.</b><br>Da noch kein gültiger Kursstand vorhanden ist, startet die App einmalig einen kontrollierten Abruf.';
 }
+
 fetch('/api/health').then(r=>r.json()).then(x=>{
   if(!x.eodhdConfigured){
-    banner.innerHTML='<b>EODHD-Schlüssel fehlt.</b><br>Die App bleibt mit manuellen Brokerkursen und gespeicherten Daten nutzbar.';
+    banner.innerHTML='<b>EODHD-Schlüssel fehlt.</b><br>Bitte den Schlüssel in Vercel prüfen. Depotstammdaten und manuelle Brokerkurse bleiben nutzbar.';
+    return;
   }
-}).catch(()=>{});
+  if(!restoredMarketData){
+    refresh({bootstrap:true});
+  }
+}).catch(error=>{
+  banner.innerHTML='<b>Verbindung konnte nicht geprüft werden.</b><br>Bitte ↻ drücken, sobald die Verbindung wieder verfügbar ist.';
+});
+

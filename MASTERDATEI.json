@@ -1,5 +1,5 @@
 {
-  "version": "stability-base",
+  "version": "stability-base-fixed",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -77,6 +77,12 @@
       "apiErrorsNeverDeleteGoodData": true,
       "manualBrokerPricesIndependentFromEODHD": true,
       "automatedTests": 9
+    },
+    "startupPolicy": {
+      "withValidCache": "show cache immediately, no automatic request",
+      "withoutValidCache": "one controlled bootstrap request after health check",
+      "manualRefresh": true,
+      "marketCoreBundledIntoApp": true
     }
   },
   "activeSBrokerPositions": [
