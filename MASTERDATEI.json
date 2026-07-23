@@ -1,5 +1,5 @@
 {
-  "version": "4.3-diagnose",
+  "version": "stability-base",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -69,27 +69,14 @@
       "previewRedirect": true,
       "diagnosticsLocation": "Einstellungen > Hilfe & Diagnose"
     },
-    "marketDataCache": {
-      "browserFreshHours": 6,
-      "browserRetentionDays": 14,
-      "serverBestEffortHours": 6,
-      "singleHistoryRequestPerSymbol": true,
-      "preserveLastGoodDataOnError": true,
-      "stopAfterRateLimit": true
-    },
-    "fallbackData": {
-      "loadBeforeRender": true,
-      "neverOverwriteGoodDataWithErrors": true,
-      "migrateLegacyCaches": true,
-      "showLastGoodPortfolioOnRateLimit": true
-    },
-    "diagnostics": {
-      "visibleUnder": "Einstellungen > Hilfe & Diagnose",
-      "recordsCacheReads": true,
-      "recordsCacheWrites": true,
-      "listsStorageKeys": true,
-      "copyableReport": true,
-      "destructiveActions": false
+    "stabilityArchitecture": {
+      "goldenMaster": "Release 4.0 visual and functional base",
+      "automaticMarketRequests": false,
+      "lastGoodSnapshotInsideMainBackup": true,
+      "separateLegacyMarketCache": true,
+      "apiErrorsNeverDeleteGoodData": true,
+      "manualBrokerPricesIndependentFromEODHD": true,
+      "automatedTests": 9
     }
   },
   "activeSBrokerPositions": [

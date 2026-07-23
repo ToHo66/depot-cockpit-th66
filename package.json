@@ -1,9 +1,13 @@
 {
   "name": "depot-cockpit-th66-professional",
-  "version": "4.3.0",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=20"
+  },
+  "scripts": {
+    "test": "node tests/stability.test.cjs",
+    "check": "node --check public/app.js && node --check api/market-data.js"
   }
 }
