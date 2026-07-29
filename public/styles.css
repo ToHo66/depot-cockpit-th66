@@ -310,4 +310,3 @@ main{padding-bottom:108px!important}
   .perf-grid{grid-template-columns:1fr!important}
   .perf-box:last-child{grid-column:auto!important}
 }
-.api-diagnostic-actions{margin:14px 0}.api-attempt-list{display:grid;gap:10px;margin-top:12px}.api-attempt{display:grid;gap:4px;padding:12px;border:1px solid var(--line,#2b3440);border-radius:14px;background:rgba(255,255,255,.025);overflow-wrap:anywhere}.api-attempt.ok{border-left:4px solid #45c985}.api-attempt.error{border-left:4px solid #ff6b6b}.api-attempt span,.api-attempt small{color:var(--muted,#9da7b3);font-size:.78rem}

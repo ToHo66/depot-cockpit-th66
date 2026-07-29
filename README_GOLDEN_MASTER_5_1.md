@@ -1,20 +1,17 @@
-# Depot-Cockpit Golden Master 5.1 – API-Diagnose
+# Depot-Cockpit Professional – Golden Master 5.1 Diagnose
 
-Basis ist unverändert Golden Master 5.0. Dieses Release verändert ausschließlich die Diagnose des Kursabrufs.
+Basis ist der unveränderte Golden Master 5.0.
 
-Neu:
-- korrekte Versionsanzeige Golden Master 5.1
-- API-Key vorhanden: Ja/Nein, ohne Schlüsselanzeige
-- Request-Zähler je Aktualisierung
-- EODHD-Symbol, Börsenplatz und bereinigter Endpunkt je Versuch
-- HTTP-Status, Antwortzeit und gekürzte Provider-Antwort
-- letzte erfolgreiche Antwort
-- Vercel Deployment-ID, URL, Umgebung und Region soweit verfügbar
-- eindeutige Trennung zwischen Vercel-Funktion und EODHD-Antwort
+Geändert wurde nur:
+- Versionsanzeige auf Golden Master 5.1
+- isolierte API-Diagnose unter **Einstellungen → Hilfe & Diagnose**
+- Anzeige von API-Key vorhanden Ja/Nein, Requestanzahl, Symbol, Börse, bereinigtem Endpunkt, HTTP-Status, Antwortzeit, Fehlermeldung, letzter erfolgreicher Antwort und Vercel-Metadaten
+- API-Schlüssel wird nie ausgegeben
+- normale Ansichten zeigen bei Fehlern nur einen neutralen Hinweis auf den Diagnosebereich
 
-Unverändert:
-- Cache-Logik
+Nicht geändert wurden:
 - Design und Navigation
 - Depotberechnung
+- Kurs- und Cachelogik
+- Positionsbestand
 - Bewertungslogik
-- Symbol- und Handelsplatzpriorität
