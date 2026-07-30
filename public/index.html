@@ -14,7 +14,7 @@
 <header class="app-header">
   <div class="header-row">
     <div>
-      <div class="eyebrow">DEPOT-COCKPIT · WIEDERHERSTELLUNG</div>
+      <div class="eyebrow">DEPOT-COCKPIT · VERSION 5.1</div>
       <h1>Übersicht</h1>
     </div>
     <button id="refreshBtn" class="icon-button" aria-label="Marktdaten aktualisieren" title="Marktdaten aktualisieren">↻</button>
@@ -27,7 +27,19 @@
 </header>
 
 <main>
-  <div id="setupBanner" class="banner hidden"></div>
+  <section class="diagnostic-card">
+  <div>
+    <span class="eyebrow">SYSTEMDIAGNOSE · VERSION 5.1</span>
+    <h2>Kursabruf eindeutig prüfen</h2>
+    <p>Diese Prüfung testet zuerst Vercel und den API-Key und danach genau eine EODHD-Kursabfrage.</p>
+  </div>
+  <button id="diagnoseBtn" class="primary diagnostic-button">Systemprüfung starten</button>
+</section>
+<section id="diagnosticPanel" class="diagnostic-panel info">
+  <div class="diagnostic-title">Version 5.1 bereit</div>
+  <div class="diagnostic-line">Die Diagnose kann jetzt gestartet werden.</div>
+</section>
+<div id="setupBanner" class="banner hidden"></div>
 
   <section id="overview" class="page active">
     <article class="hero-card">
@@ -147,6 +159,6 @@
   <button data-page="manage"><b>⚙</b><span>Einstellungen</span></button>
 </nav>
 <div id="toast" class="toast"></div>
-<script src="/app.js?v=wiederherstellung" defer></script>
+<script src="/app.js?v=5-1-diagnose-1" defer></script>
 </body>
 </html>

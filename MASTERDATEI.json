@@ -1,5 +1,5 @@
 {
-  "version": "5.0.0",
+  "version": "5.1.0",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -195,10 +195,16 @@
     ]
   },
   "recoveryNote": "Unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand. Keine spätere Cache-, Timeout- oder Startlogik enthalten.",
-  "release": "Golden Master",
+  "release": "Diagnose Kursabruf",
   "development_policy": {
     "golden_master": true,
     "one_change_per_release": true,
     "functional_changes": false
-  }
+  },
+  "scope": [
+    "Versionsanzeige",
+    "Vercel/API-Key-Prüfung",
+    "eine EODHD-Testabfrage",
+    "sichtbare Fehlerausgabe"
+  ]
 }

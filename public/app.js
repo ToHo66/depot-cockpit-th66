@@ -40,7 +40,7 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='GOLDEN MASTER 5.2 · ABRUFSCHUTZ-TEST';
+const APP_VERSION='5.1';;
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
 const STORE='th66-professional-master-v3';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
@@ -374,43 +374,116 @@ function recordTransaction(){
  }
  state.transactions.push({id:uid(),type,date,positionId:id,name:p.name,isin:p.isin,qty,price,fees,venue,realized,createdAt:new Date().toISOString()});save();render();toast(type==='BUY'?'Kauf erfasst':'Verkauf erfasst')
 }
-async function refresh(options={}){
-  const force=Boolean(options.force);
-  const today=new Date().toISOString().slice(0,10);
-  const lastDay=localStorage.getItem(MARKET_REFRESH_DAY);
-  if(marketRefreshRunning){toast('Ein Kursabruf läuft bereits');return}
-  if(lastDay===today&&!force){
-    const proceed=confirm('Heute wurde bereits ein externer Kursabruf gestartet. Erneut abrufen? Dies verbraucht weitere EODHD-Aufrufe.');
-    if(!proceed)return;
-  }
-  const eodPositions=state.positions.filter(p=>p.dataSource==='EODHD');
-  const proceed=confirm(`Jetzt ${eodPositions.length} Kursreihen abrufen? Pro Position wird nur das feste Analyse-Symbol verwendet. Es entstehen maximal ${eodPositions.length} EODHD-Aufrufe.`);
-  if(!proceed)return;
-  const b=$('#refreshBtn');marketRefreshRunning=true;b.disabled=true;b.textContent='…';$('#setupBanner').classList.add('hidden');
+async function fetchJsonWithTimeout(url,options={},timeoutMs=20000){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeoutMs);
   try{
-    const positions=eodPositions.map(p=>({...p,brokerVenue:p.analysisVenue,analysisVenue:p.analysisVenue,candidates:venueCandidates(p).slice(0,1)}));
-    localStorage.setItem(MARKET_REFRESH_DAY,today);
-    const r=await fetch('/api/market-data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({positions})});
-    const x=await r.json();
-    if(!r.ok||!x.ok)throw Object.assign(new Error(x.error||'Datenabruf fehlgeschlagen'),{code:x.code});
-    const next={...state.data};
-    for(const y of x.results||[]){if(y.ok||!next[y.id])next[y.id]=y}
-    state.data=next;state.updatedAt=x.generatedAt;saveMarketCache();render();
-    const ok=(x.results||[]).filter(y=>y.ok).length;
-    const stopped=x.stoppedBecause?` · Abbruch: ${x.stoppedBecause}`:'';
-    toast(`${ok}/${positions.length} Kursreihen aktualisiert${stopped}`);
-    if(x.stoppedBecause){const ban=$('#setupBanner');ban.classList.remove('hidden');ban.innerHTML='<b>Abrufschutz hat weitere Anfragen gestoppt.</b><br>'+x.stoppedBecause}
+    const response=await fetch(url,{...options,signal:controller.signal,cache:'no-store'});
+    const text=await response.text();
+    let body=null;
+    try{body=JSON.parse(text)}catch{body={ok:false,error:`Ungültige Serverantwort (${response.status})`,raw:text.slice(0,300)}}
+    return {response,body}
+  }catch(error){
+    if(error?.name==='AbortError')throw new Error(`Zeitüberschreitung nach ${Math.round(timeoutMs/1000)} Sekunden`);
+    throw error
+  }finally{clearTimeout(timer)}
+}
+function showDiagnostic(title,lines,kind='info'){
+  const panel=$('#diagnosticPanel');
+  if(!panel)return;
+  panel.className=`diagnostic-panel ${kind}`;
+  panel.innerHTML=`<div class="diagnostic-title">${title}</div>${lines.map(x=>`<div class="diagnostic-line">${x}</div>`).join('')}`;
+  panel.scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function runSystemDiagnosis(){
+  const button=$('#diagnoseBtn');
+  if(button){button.disabled=true;button.textContent='Prüfung läuft …'}
+  showDiagnostic('Systemprüfung läuft',['1. Vercel-Funktion wird geprüft …']);
+  try{
+    const health=await fetchJsonWithTimeout('/api/health',{},8000);
+    const h=health.body||{};
+    showDiagnostic('Systemprüfung läuft',[
+      `App-Version: ${APP_VERSION}`,
+      `Vercel-Funktion: ${health.response.ok?'erreichbar':'Fehler '+health.response.status}`,
+      `EODHD-Schlüssel: ${h.eodhdConfigured?'vorhanden':'FEHLT'}`,
+      `Deployment: ${h.deploymentId||'nicht verfügbar'}`,
+      '2. Einzelne EODHD-Testabfrage wird geprüft …'
+    ],h.eodhdConfigured?'info':'error');
+
+    if(!h.eodhdConfigured) return;
+
+    const first=state.positions.find(p=>p.dataSource==='EODHD');
+    const candidate=first?venueCandidates(first)[0]:null;
+    if(!candidate)throw new Error('Für keine Position ist ein Testsymbol hinterlegt.');
+
+    const test=await fetchJsonWithTimeout('/api/diagnose-market',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({symbol:candidate.symbol,venue:candidate.venue})
+    },12000);
+    const x=test.body||{};
+    const ok=test.response.ok&&x.ok;
+    showDiagnostic(ok?'Systemprüfung erfolgreich':'Systemprüfung hat den Fehler gefunden',[
+      `App-Version: ${APP_VERSION}`,
+      `API-Key vorhanden: ${h.eodhdConfigured?'Ja':'Nein'}`,
+      `Testsymbol: ${candidate.symbol}`,
+      `Handelsplatz: ${candidate.venue||'–'}`,
+      `HTTP-Status EODHD: ${x.upstreamStatus??'keine Antwort'}`,
+      `Antwortzeit: ${x.durationMs??'–'} ms`,
+      `Datensätze: ${x.rowCount??0}`,
+      `Ergebnis: ${ok?'Kursquelle funktioniert':(x.error||'Abruf fehlgeschlagen')}`,
+      `Zeitpunkt: ${x.checkedAt||new Date().toISOString()}`
+    ],ok?'success':'error');
+  }catch(error){
+    showDiagnostic('Systemprüfung abgebrochen',[
+      `App-Version: ${APP_VERSION}`,
+      `Fehler: ${error.message||String(error)}`,
+      'Die Oberfläche reagiert. Der Fehler liegt im Server- oder Datenabruf.'
+    ],'error');
+  }finally{
+    if(button){button.disabled=false;button.textContent='Systemprüfung starten'}
+  }
+}
+async function refresh(){
+  const b=$('#refreshBtn');
+  b.disabled=true;b.textContent='…';
+  showDiagnostic('Kursaktualisierung läuft',['Die Anfrage wurde gestartet. Spätestens nach 20 Sekunden erscheint ein Ergebnis.']);
+  try{
+    const positions=state.positions.filter(p=>p.dataSource==='EODHD').map(p=>({...p,brokerVenue:p.analysisVenue,analysisVenue:p.analysisVenue,candidates:venueCandidates(p)}));
+    const {response:r,body:x}=await fetchJsonWithTimeout('/api/market-data',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({positions})
+    },20000);
+    if(!r.ok||!x.ok)throw Object.assign(new Error(x.error||`Datenabruf fehlgeschlagen (${r.status})`),{code:x.code});
+    state.data=Object.fromEntries((x.results||[]).map(y=>[y.id,y]));
+    state.updatedAt=x.generatedAt;
+    saveMarketCache();render();
+    const good=(x.results||[]).filter(y=>y.ok).length;
+    showDiagnostic(good?'Kursaktualisierung beendet':'Keine verwertbaren Kurse',[
+      `Erfolgreich: ${good}/${positions.length}`,
+      `Fehler: ${positions.length-good}/${positions.length}`,
+      `Serverversion: ${x.version||'–'}`,
+      `Zeitpunkt: ${x.generatedAt||'–'}`
+    ],good?'success':'error');
+    toast(`${good}/${positions.length} Marktdaten geladen`);
   }catch(e){
-    const ban=$('#setupBanner');ban.classList.remove('hidden');
-    ban.innerHTML=e.code==='API_KEY_MISSING'?'<b>EODHD-Schlüssel fehlt.</b><br>Bitte in Vercel als <code>EODHD_API_KEY</code> hinterlegen.':'<b>Datenabruf fehlgeschlagen:</b><br>'+e.message;
-    toast('Marktdaten konnten nicht geladen werden')
-  }finally{marketRefreshRunning=false;b.disabled=false;b.textContent='↻'}
+    showDiagnostic('Kursaktualisierung fehlgeschlagen',[
+      `Fehler: ${e.message||String(e)}`,
+      `Code: ${e.code||'–'}`,
+      'Mit „Systemprüfung starten“ kann die Ursache einzeln geprüft werden.'
+    ],'error');
+    toast('Marktdaten konnten nicht geladen werden');
+  }finally{b.disabled=false;b.textContent='↻'}
 }
 function showPage(page){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));$$('.page').forEach(x=>x.classList.remove('active'));$('#'+page)?.classList.add('active');scrollTo({top:0,behavior:'smooth'})}
-function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#saveCourseManager').onclick=saveCourseManager;$('#testCourseManager').onclick=async()=>{saveCourseManager();await refresh();showPage('manage');document.querySelector('#courseManagerBlock')?.scrollIntoView({behavior:'smooth',block:'start'})};$('#recordTransaction').onclick=recordTransaction;$('#txDate').value=new Date().toISOString().slice(0,10);$('#txVenue').innerHTML=venueOptions('Tradegate');$('#expandAll').onclick=()=>{const cards=$$('.position-card'),all=cards.every(c=>c.classList.contains('open'));cards.forEach(c=>c.classList.toggle('open',!all));$('#expandAll').textContent=all?'Alle öffnen':'Alle schließen'};$('#saveReferences').onclick=()=>{const sbRef=parseNum($('#sbrokerReference').value);
+function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#diagnoseBtn').onclick=runSystemDiagnosis;$('#saveCourseManager').onclick=saveCourseManager;$('#testCourseManager').onclick=async()=>{saveCourseManager();await refresh();showPage('manage');document.querySelector('#courseManagerBlock')?.scrollIntoView({behavior:'smooth',block:'start'})};$('#recordTransaction').onclick=recordTransaction;$('#txDate').value=new Date().toISOString().slice(0,10);$('#txVenue').innerHTML=venueOptions('Tradegate');$('#expandAll').onclick=()=>{const cards=$$('.position-card'),all=cards.every(c=>c.classList.contains('open'));cards.forEach(c=>c.classList.toggle('open',!all));$('#expandAll').textContent=all?'Alle öffnen':'Alle schließen'};$('#saveReferences').onclick=()=>{const sbRef=parseNum($('#sbrokerReference').value);
 state.settings.sbrokerReference=Number.isFinite(sbRef)&&sbRef>0?sbRef:null;
 state.settings.sbrokerReferenceUpdatedAt=Number.isFinite(sbRef)&&sbRef>0?new Date().toISOString():null;
 const trRef=parseNum($('#trReference').value);
 state.settings.trReference=Number.isFinite(trRef)&&trRef>0?trRef:null;
 state.settings.trReferenceUpdatedAt=Number.isFinite(trRef)&&trRef>0?new Date().toISOString():null;save();render();toast('Manuelle Broker-Referenzen gespeichert')};$('#saveBrokerPositionValues').onclick=()=>{$$('.broker-position-value-input').forEach(i=>{const p=state.positions.find(x=>x.id===i.dataset.id);const n=parseNum(i.value);if(Number.isFinite(n)&&p?.qty>0){state.settings.brokerPositionValues[p.id]=n;state.settings.brokerPrices[p.id]=n/p.qty}else{delete state.settings.brokerPositionValues[i.dataset.id]}});const sbVals=state.positions.filter(p=>p.broker==='sBroker').map(p=>brokerPositionValue(p)).filter(Number.isFinite);if(sbVals.length===state.positions.filter(p=>p.broker==='sBroker').length){state.settings.sbrokerReference=sbVals.reduce((a,b)=>a+b,0);state.settings.sbrokerReferenceUpdatedAt=new Date().toISOString()}save();render();toast('Broker-Positionswerte gespeichert')};$('#saveBrokerPrices').onclick=()=>{$$('.broker-input').forEach(i=>{const n=parseNum(i.value);if(Number.isFinite(n))state.settings.brokerPrices[i.dataset.id]=n;else delete state.settings.brokerPrices[i.dataset.id]});save();render();toast('Brokerkurse gespeichert')};$('#savePositionSettings').onclick=()=>{$$('.editor-card').forEach(card=>{const p=state.positions.find(x=>x.id===card.dataset.id);card.querySelectorAll('[data-field]').forEach(el=>{const f=el.dataset.field;let v=el.value;if(['qty','purchasePrice'].includes(f))v=parseNum(v);if(f==='fallbackVenues')v=String(v).split(',').map(x=>x.trim()).filter(Boolean);p[f]=v});p.venueSymbols={...(p.venueSymbols||{})};card.querySelectorAll('[data-venue-symbol]').forEach(el=>{const venue=el.dataset.venueSymbol;const value=el.value.trim();if(value)p.venueSymbols[venue]=value;else delete p.venueSymbols[venue]});p.marketSymbol=p.analysisSymbol||p.marketSymbol;normalizePosition(p)});save();render();toast('Stammdaten gespeichert')};$('#addPosition').onclick=()=>{const name=$('#newName').value.trim(),isin=$('#newIsin').value.trim().toUpperCase(),qty=parseNum($('#newQty').value);if(!name||!isin||!Number.isFinite(qty)){toast('Name, ISIN und Stückzahl fehlen');return}state.positions.push(normalizePosition({id:uid(),name,isin,wkn:$('#newWkn').value.trim().toUpperCase(),qty,purchasePrice:parseNum($('#newPurchasePrice').value),broker:$('#newBroker').value,brokerDisplaySource:$('#newVenue').value,analysisVenue:'Xetra',fallbackVenues:$('#newFallbackVenues').value.split(',').map(x=>x.trim()).filter(Boolean),dataSource:$('#newSource').value,analysisSymbol:$('#newSymbol').value.trim(),currency:'EUR'}));save();render();toast('Position hinzugefügt')};$('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({version:APP_VERSION,exportedAt:new Date().toISOString(),positions:state.positions,archive:state.archive,transactions:state.transactions,settings:state.settings},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`depot-cockpit-sicherung-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)};$('#importInput').onchange=async e=>{try{const x=JSON.parse(await e.target.files[0].text());if(!Array.isArray(x.positions)||!x.settings)throw new Error();state.positions=x.positions;state.archive=x.archive||[];state.transactions=x.transactions||[];state.settings={...state.settings,...x.settings,brokerPrices:{...(x.settings.brokerPrices||{})},brokerPositionValues:{...(x.settings.brokerPositionValues||{})}};save();render();toast('Sicherung importiert')}catch{toast('Ungültige Sicherungsdatei')}};$('#resetBtn').onclick=()=>{if(confirm('Lokale Stammdaten, Brokerwerte und Archiv wirklich zurücksetzen?')){localStorage.removeItem(STORE);state.positions=structuredClone(DEFAULT_POSITIONS);state.archive=[];state.transactions=[];state.settings={sbrokerReference:null,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']};state.data={};render();toast('Lokale Daten zurückgesetzt')}}}
-load();loadMarketCache();wire();render();fetch('/api/health').then(r=>r.json()).then(x=>{if(!x.eodhdConfigured){const b=$('#setupBanner');b.classList.remove('hidden');b.innerHTML='<b>Depot-Cockpit Professional ist aktiv.</b><br>Für EODHD-Marktdaten fehlt noch der geschützte Schlüssel in Vercel.'}else if(!state.updatedAt){const b=$('#setupBanner');b.classList.remove('hidden');b.innerHTML='<b>Kein automatischer Kursabruf.</b><br>Der Abruf startet nur nach Klick auf ↻ und deiner Bestätigung.'}}).catch(()=>{});
+load();loadMarketCache();wire();render();
+showDiagnostic('Version 5.1 bereit',[
+  'Die Oberfläche ist aktiv.',
+  'Drücke „Systemprüfung starten“, um Vercel, API-Key und eine einzelne EODHD-Abfrage zu prüfen.',
+  'Es erfolgt kein automatischer Massenabruf.'
+],'info');

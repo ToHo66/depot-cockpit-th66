@@ -310,3 +310,11 @@ main{padding-bottom:108px!important}
   .perf-grid{grid-template-columns:1fr!important}
   .perf-box:last-child{grid-column:auto!important}
 }
+
+.diagnostic-card{margin:18px auto;max-width:960px;padding:22px 24px;border:1px solid rgba(37,99,235,.22);border-radius:24px;background:linear-gradient(135deg,#fff,#eef5ff);display:flex;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 14px 35px rgba(15,23,42,.07)}
+.diagnostic-card h2{margin:5px 0 7px}.diagnostic-card p{margin:0;color:#526071;max-width:620px}
+.diagnostic-button{min-height:48px;padding:0 22px;white-space:nowrap}
+.diagnostic-panel{margin:12px auto 18px;max-width:960px;padding:18px 22px;border-radius:18px;border:1px solid #d7dfeb;background:#f8fafc}
+.diagnostic-panel.info{border-color:#bfd2f7;background:#f3f7ff}.diagnostic-panel.success{border-color:#9ed6b2;background:#f1fbf4}.diagnostic-panel.error{border-color:#efb4b4;background:#fff4f4}
+.diagnostic-title{font-size:17px;font-weight:800;margin-bottom:8px}.diagnostic-line{font-size:14px;line-height:1.55;overflow-wrap:anywhere}
+@media(max-width:700px){.diagnostic-card{align-items:stretch;flex-direction:column}.diagnostic-button{width:100%}}
