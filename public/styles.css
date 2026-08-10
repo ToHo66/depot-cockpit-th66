@@ -405,7 +405,7 @@ input,select,textarea{background:#fff!important;border:1px solid #c7d3e0!importa
   background:linear-gradient(135deg,#1769e0,#0d47a1)!important;
   color:#fff!important;border-color:transparent!important
 }
-[class*="priority"],.priority,.priority-pill,.score,.score-pill{
+ .course-status,.priority-pill,.score,.score-pill{
   min-width:118px!important;min-height:38px!important;
   display:inline-flex!important;align-items:center!important;justify-content:center!important;
   padding:7px 15px!important;font-size:17px!important;line-height:1!important;
@@ -414,10 +414,10 @@ input,select,textarea{background:#fff!important;border:1px solid #c7d3e0!importa
   box-shadow:0 4px 10px rgba(15,23,42,.16)!important;
   text-shadow:0 1px 1px rgba(0,0,0,.24)!important
 }
-[class*="priority"].green,.priority.green,.score.green{background:#176b3b!important;color:#fff!important}
-[class*="priority"].amber,.priority.amber,.score.amber{background:#8f5300!important;color:#fff!important}
-[class*="priority"].red,.priority.red,.score.red{background:#a32626!important;color:#fff!important}
-[style*="background"][class*="priority"],[style*="background"].priority,[style*="background"].score{
+.course-status.green,.priority-pill.green,.score.green{background:#176b3b!important;color:#fff!important}
+.course-status.amber,.priority-pill.amber,.score.amber{background:#8f5300!important;color:#fff!important}
+.course-status.red,.priority-pill.red,.score.red{background:#a32626!important;color:#fff!important}
+[style*="background"].course-status,[style*="background"].priority-pill,[style*="background"].score{
   color:#fff!important;font-weight:950!important
 }
 .analysis-card,.analysis-row,.analysis-item{font-size:16px!important}
@@ -503,3 +503,12 @@ main{width:100%!important;margin:0!important;padding-left:14px!important;padding
   main{padding-left:10px!important;padding-right:10px!important}
   .reconciliation-summary,.comparison-values{grid-template-columns:1fr!important}
 }
+
+/* VERSION 5.3.3 — iPhone priority list hard reset */
+.priority-box{display:block!important;width:100%!important;min-width:0!important;border-radius:18px!important}
+.priority-row{display:grid!important;width:100%!important;min-width:0!important;grid-template-columns:32px minmax(0,1fr)!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;padding:12px 0!important}
+.priority-rank{min-width:0!important;width:28px!important;height:28px!important;padding:0!important;font-size:14px!important}
+.priority-row>div{min-width:0!important;width:auto!important}
+.priority-row b{display:block!important;font-size:15px!important;line-height:1.2!important;white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important}
+.priority-row small{display:block!important;font-size:12px!important;line-height:1.3!important;white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important}
+.priority-row .course-status{grid-column:2!important;min-width:0!important;max-width:180px!important;width:auto!important;height:auto!important;min-height:28px!important;padding:5px 9px!important;font-size:12px!important;line-height:1.15!important}

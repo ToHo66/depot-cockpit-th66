@@ -1,5 +1,5 @@
 {
-  "version": "5.3.2",
+  "version": "5.3.3",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -195,7 +195,7 @@
     ]
   },
   "recoveryNote": "Unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand. Keine spätere Cache-, Timeout- oder Startlogik enthalten.",
-  "release": "iPhone First + Xetra Parser Deep Fix",
+  "release": "Xetra Trading-Session Fix + iPhone Layout Hard Fix",
   "development_policy": {
     "golden_master": true,
     "one_change_per_release": true,
@@ -239,11 +239,10 @@
     "autoCreateDepotPosition": true
   },
   "fixes": [
-    "Xetra-Parser verarbeitet sowohl JSON als auch NDJSON-Bundles",
-    "Parser durchsucht komplette verschachtelte Trade-Events statt nur flache Teilobjekte",
-    "Matching über ISIN, WKN, Mnemonic und vorhandene Instrument-IDs",
-    "Preis/MIC/Zeit werden rekursiv aus verschachtelten Feldern ermittelt",
-    "iPhone ist verbindliches Primärlayout; horizontales Desktop-Canvas wird verhindert",
-    "Schnellprüfung und Depot-Differenzprüfer brechen auf dem iPhone sauber um"
+    "Kritischer Kursfehler behoben: nach Xetra-Handelsschluss wird nicht mehr nur 15–90 Minuten rückwärts ab aktueller Uhrzeit gesucht, sondern rückwärts im tatsächlichen Xetra-Handelsfenster.",
+    "Post-Trade-Suche stoppt pro Position beim neuesten gefundenen Trade und kann bis zum Handelsbeginn zurückgehen.",
+    "Wochenende/vor Handelsbeginn: letzter Werktag wird als Suchfenster verwendet.",
+    "iPhone-Grafikfehler behoben: globale CSS-Regel [class*=priority] entfernte versehentlich das Layout von priority-box und priority-row; Selektoren auf echte Status-Badges begrenzt.",
+    "Schnellprüfung auf iPhone als vertikale Liste hart zurückgesetzt."
   ]
 }
