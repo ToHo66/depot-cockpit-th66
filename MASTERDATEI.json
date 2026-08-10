@@ -1,5 +1,5 @@
 {
-  "version": "5.2.1",
+  "version": "5.2.2",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -195,18 +195,18 @@
     ]
   },
   "recoveryNote": "Unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand. Keine spätere Cache-, Timeout- oder Startlogik enthalten.",
-  "release": "EODHD Requestschutz",
+  "release": "Bedienung und Lesbarkeit",
   "development_policy": {
     "golden_master": true,
     "one_change_per_release": true,
     "functional_changes": false
   },
   "scope": [
-    "höherer Kontrast",
-    "kräftigere Typografie",
-    "modernere Karten und Navigation",
-    "bessere Lesbarkeit in Analyse und Bewertungen",
-    "keine Änderung am funktionierenden Kursabruf"
+    "Analyse-Buttons wieder bedienbar",
+    "Positionsfilter wieder bedienbar",
+    "Alle öffnen/schließen wieder bedienbar",
+    "Prüfprioritäten größer und kontrastreicher",
+    "Kursabruf unverändert"
   ],
   "requestProtection": {
     "automaticBackgroundRequests": false,

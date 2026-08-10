@@ -389,3 +389,42 @@ input,select,textarea{background:#fff!important;border:1px solid #c7d3e0!importa
 .diagnostic-panel.error{background:linear-gradient(135deg,#fff0f0,#fff)!important}
 .diagnostic-title{color:#0f172a!important;font-weight:850!important}
 .diagnostic-line{color:#334155!important;font-weight:560!important}
+
+/* VERSION 5.2.2 – BEDIENUNG UND LESBARKEIT */
+[data-analysis-tab],[data-position-filter],[data-open-all]{
+  cursor:pointer!important;pointer-events:auto!important;opacity:1!important;
+  min-height:40px!important;padding:0 17px!important;
+  border:1px solid #90a4bb!important;background:#fff!important;
+  color:#122033!important;font-weight:800!important;
+  box-shadow:0 3px 10px rgba(15,23,42,.10)!important
+}
+[data-analysis-tab]:hover,[data-position-filter]:hover,[data-open-all]:hover{
+  border-color:#1769e0!important;background:#edf5ff!important;color:#0d47a1!important
+}
+[data-analysis-tab].active,[data-position-filter].active{
+  background:linear-gradient(135deg,#1769e0,#0d47a1)!important;
+  color:#fff!important;border-color:transparent!important
+}
+[class*="priority"],.priority,.priority-pill,.score,.score-pill{
+  min-width:118px!important;min-height:38px!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  padding:7px 15px!important;font-size:17px!important;line-height:1!important;
+  font-weight:950!important;color:#fff!important;
+  border:2px solid rgba(15,23,42,.18)!important;
+  box-shadow:0 4px 10px rgba(15,23,42,.16)!important;
+  text-shadow:0 1px 1px rgba(0,0,0,.24)!important
+}
+[class*="priority"].green,.priority.green,.score.green{background:#176b3b!important;color:#fff!important}
+[class*="priority"].amber,.priority.amber,.score.amber{background:#8f5300!important;color:#fff!important}
+[class*="priority"].red,.priority.red,.score.red{background:#a32626!important;color:#fff!important}
+[style*="background"][class*="priority"],[style*="background"].priority,[style*="background"].score{
+  color:#fff!important;font-weight:950!important
+}
+.analysis-card,.analysis-row,.analysis-item{font-size:16px!important}
+.analysis-card .label,.analysis-row .label,.analysis-item .label{
+  color:#263548!important;font-weight:780!important
+}
+.analysis-card .value,.analysis-row .value,.analysis-item .value{
+  color:#0b1320!important;font-size:17px!important;font-weight:900!important
+}
+.position-card.expanded{box-shadow:0 14px 34px rgba(22,40,70,.14)!important;border-color:#7ea8df!important}

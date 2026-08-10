@@ -40,7 +40,7 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='5.2.1';;;;
+const APP_VERSION='5.2.2';;;;;
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
 const STORE='th66-professional-master-v3';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
@@ -541,7 +541,45 @@ async function refresh(){
   }
 }
 function showPage(page){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));$$('.page').forEach(x=>x.classList.remove('active'));$('#'+page)?.classList.add('active');scrollTo({top:0,behavior:'smooth'})}
-function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#diagnoseBtn').onclick=runSystemDiagnosis;$('#saveCourseManager').onclick=saveCourseManager;$('#testCourseManager').onclick=async()=>{saveCourseManager();await refresh();showPage('manage');document.querySelector('#courseManagerBlock')?.scrollIntoView({behavior:'smooth',block:'start'})};$('#recordTransaction').onclick=recordTransaction;$('#txDate').value=new Date().toISOString().slice(0,10);$('#txVenue').innerHTML=venueOptions('Tradegate');$('#expandAll').onclick=()=>{const cards=$$('.position-card'),all=cards.every(c=>c.classList.contains('open'));cards.forEach(c=>c.classList.toggle('open',!all));$('#expandAll').textContent=all?'Alle öffnen':'Alle schließen'};$('#saveReferences').onclick=()=>{const sbRef=parseNum($('#sbrokerReference').value);
+
+function setActiveButton(button,selector){
+  document.querySelectorAll(selector).forEach(x=>x.classList.remove('active'));
+  button.classList.add('active');
+}
+function bindClickableGroup(selector,callback){
+  document.querySelectorAll(selector).forEach(button=>{
+    button.onclick=()=>{
+      setActiveButton(button,selector);
+      callback(button.dataset.value||button.dataset.tab||button.textContent.trim());
+    };
+  });
+}
+function applyPerformanceFilter(label){
+  const key=String(label||'').toLowerCase().trim();
+  document.querySelectorAll('[data-performance-section]').forEach(section=>{
+    const sectionKey=String(section.dataset.performanceSection||'').toLowerCase();
+    section.hidden=!(key==='performance'||sectionKey===key);
+  });
+}
+function applyPositionFilter(label){
+  const key=String(label||'').toLowerCase().trim();
+  document.querySelectorAll('.position-card').forEach(card=>{
+    const type=String(card.dataset.assetType||card.dataset.type||'').toLowerCase();
+    card.hidden=!(key==='alle'||!key||type.includes(key.replace('etfs','etf').replace('aktien','aktie').replace('rohstoffe','rohstoff')));
+  });
+}
+function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#diagnoseBtn').onclick=runSystemDiagnosis;
+  bindClickableGroup('[data-analysis-tab]',applyPerformanceFilter);
+  bindClickableGroup('[data-position-filter]',applyPositionFilter);
+  document.querySelectorAll('[data-open-all]').forEach(button=>{
+    button.onclick=()=>{
+      const cards=[...document.querySelectorAll('.position-card')];
+      const shouldOpen=cards.some(card=>!card.classList.contains('expanded'));
+      cards.forEach(card=>card.classList.toggle('expanded',shouldOpen));
+      button.textContent=shouldOpen?'Alle schließen':'Alle öffnen';
+    };
+  });
+$('#saveCourseManager').onclick=saveCourseManager;$('#testCourseManager').onclick=async()=>{saveCourseManager();await refresh();showPage('manage');document.querySelector('#courseManagerBlock')?.scrollIntoView({behavior:'smooth',block:'start'})};$('#recordTransaction').onclick=recordTransaction;$('#txDate').value=new Date().toISOString().slice(0,10);$('#txVenue').innerHTML=venueOptions('Tradegate');$('#expandAll').onclick=()=>{const cards=$$('.position-card'),all=cards.every(c=>c.classList.contains('open'));cards.forEach(c=>c.classList.toggle('open',!all));$('#expandAll').textContent=all?'Alle öffnen':'Alle schließen'};$('#saveReferences').onclick=()=>{const sbRef=parseNum($('#sbrokerReference').value);
 state.settings.sbrokerReference=Number.isFinite(sbRef)&&sbRef>0?sbRef:null;
 state.settings.sbrokerReferenceUpdatedAt=Number.isFinite(sbRef)&&sbRef>0?new Date().toISOString():null;
 const trRef=parseNum($('#trReference').value);
