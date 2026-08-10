@@ -1,5 +1,5 @@
 {
-  "version": "5.2.2",
+  "version": "5.3.0",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -195,7 +195,7 @@
     ]
   },
   "recoveryNote": "Unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand. Keine spätere Cache-, Timeout- oder Startlogik enthalten.",
-  "release": "Bedienung und Lesbarkeit",
+  "release": "Xetra Engine + offene Kaufmaske",
   "development_policy": {
     "golden_master": true,
     "one_change_per_release": true,
@@ -216,5 +216,26 @@
     "stopImmediatelyOn402": true,
     "preserveExistingSuccessfulData": true,
     "blockDuplicateRequestsSameDay": true
+  },
+  "marketArchitecture": {
+    "primary": "Deutsche Börse/Xetra Delayed (15 min)",
+    "fallbacks": [
+      "Tradegate Delayed",
+      "Frankfurt Delayed",
+      "EODHD history/special cases"
+    ],
+    "centralCacheMinutes": 15,
+    "deviceLocalDailyBlocking": false
+  },
+  "buyArchitecture": {
+    "instrumentSearch": true,
+    "searchFields": [
+      "Name",
+      "ISIN",
+      "WKN",
+      "Mnemonic"
+    ],
+    "freeEntryAlwaysAllowed": true,
+    "autoCreateDepotPosition": true
   }
 }

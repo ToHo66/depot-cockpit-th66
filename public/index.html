@@ -7,14 +7,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="stylesheet" href="/styles.css?v=5-2-2-ui-1" />
+  <link rel="stylesheet" href="/styles.css?v=5-3-xetra-engine-1" />
   <title>Depot-Cockpit Professional</title>
 </head>
 <body>
 <header class="app-header">
   <div class="header-row">
     <div>
-      <div class="eyebrow">DEPOT-COCKPIT · VERSION 5.2.2</div>
+      <div class="eyebrow">DEPOT-COCKPIT · VERSION 5.3</div>
       <h1>Übersicht</h1>
     </div>
     <button id="refreshBtn" class="icon-button" aria-label="Marktdaten aktualisieren" title="Marktdaten aktualisieren">↻</button>
@@ -27,9 +27,44 @@
 </header>
 
 <main>
-  <section class="diagnostic-card">
+  
+<section class="open-buy-card" id="openBuyCard">
+  <div class="open-buy-head">
+    <div>
+      <span class="eyebrow">KAUF · OFFENE INSTRUMENTSUCHE</span>
+      <h2>Neues Wertpapier kaufen</h2>
+      <p>Name, ISIN, WKN oder Kürzel suchen. Falls das Papier nicht im Deutsche-Börse-Instrument-Master liegt, ist eine vollständig freie Eingabe möglich.</p>
+    </div>
+  </div>
+
+  <div class="buy-search-row">
+    <input id="buyInstrumentQuery" placeholder="z. B. IE00BK5BQT80, VWCE, SAP oder ETF-Name">
+    <button id="buyInstrumentSearchBtn" type="button" class="primary">Suchen</button>
+  </div>
+  <div id="buyInstrumentResults" class="instrument-results"></div>
+  <div id="buyInstrumentSelected" class="instrument-selected-wrap">
+    <span class="muted">Noch kein Instrument gewählt. Freie Eingabe ist jederzeit möglich.</span>
+  </div>
+
+  <div class="buy-grid">
+    <label>Name<input id="buyName" placeholder="frei eingebbar"></label>
+    <label>ISIN<input id="buyIsin" placeholder="optional"></label>
+    <label>WKN<input id="buyWkn" placeholder="optional"></label>
+    <label>Kürzel<input id="buyMnemonic" placeholder="optional"></label>
+    <label>Typ<input id="buyType" placeholder="ETF, Aktie, ETC …"></label>
+    <label>Währung<input id="buyCurrency" value="EUR"></label>
+    <label>Handelsplatz<input id="buyVenue" value="Xetra"></label>
+    <label>Stückzahl<input id="buyQty" inputmode="decimal"></label>
+    <label>Kaufkurs<input id="buyPrice" inputmode="decimal"></label>
+    <label>Gebühren<input id="buyFees" inputmode="decimal" value="0"></label>
+    <label>Broker<select id="buyBroker"><option>sBroker</option><option>Trade Republic</option><option>Sonstiger</option></select></label>
+    <label>Kaufdatum<input id="buyDate" type="date"></label>
+  </div>
+  <button id="buyOpenInstrumentBtn" type="button" class="primary full-width">Kauf speichern</button>
+</section>
+<section class="diagnostic-card">
   <div>
-    <span class="eyebrow">SYSTEMDIAGNOSE · VERSION 5.2.2</span>
+    <span class="eyebrow">SYSTEMDIAGNOSE · VERSION 5.3</span>
     <h2>Kursabruf eindeutig prüfen</h2>
     <p>Diese Prüfung testet zuerst Vercel und den API-Key und danach genau eine EODHD-Kursabfrage.</p>
   </div>
@@ -159,6 +194,6 @@
   <button data-page="manage"><b>⚙</b><span>Einstellungen</span></button>
 </nav>
 <div id="toast" class="toast"></div>
-<script src="/app.js?v=5-2-2-ui-1" defer></script>
+<script src="/app.js?v=5-3-xetra-engine-1" defer></script>
 </body>
 </html>

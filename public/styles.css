@@ -428,3 +428,37 @@ input,select,textarea{background:#fff!important;border:1px solid #c7d3e0!importa
   color:#0b1320!important;font-size:17px!important;font-weight:900!important
 }
 .position-card.expanded{box-shadow:0 14px 34px rgba(22,40,70,.14)!important;border-color:#7ea8df!important}
+
+/* VERSION 5.3 – XETRA ENGINE + OFFENE KAUFMASKE */
+.open-buy-card{
+  margin:18px auto;max-width:980px;padding:24px;
+  border:1px solid rgba(23,105,224,.22);border-radius:24px;
+  background:linear-gradient(135deg,#f7fbff,#ffffff);
+  box-shadow:0 14px 36px rgba(21,42,74,.09)
+}
+.open-buy-head h2{margin:5px 0 8px}
+.open-buy-head p{margin:0;color:#475569}
+.buy-search-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:18px}
+.buy-search-row input{min-height:48px}
+.instrument-results{display:grid;gap:8px;margin:12px 0}
+.instrument-result{
+  display:grid;grid-template-columns:1fr;gap:3px;text-align:left;
+  padding:12px 14px;background:#fff;border:1px solid #cfd9e6;border-radius:14px;
+  color:#152236;box-shadow:0 4px 12px rgba(15,23,42,.05)
+}
+.instrument-result:hover{border-color:#1769e0;background:#f1f6ff}
+.instrument-result span{font-size:12px;color:#526173}
+.instrument-selected-wrap{margin:12px 0 16px;padding:12px 14px;border-radius:14px;background:#eef5ff;border:1px solid #c9dcfa}
+.instrument-selected{display:grid;gap:3px}
+.instrument-selected span{font-size:12px;color:#40536b}
+.buy-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.buy-grid label{display:grid;gap:6px;color:#334155;font-size:12px;font-weight:700}
+.full-width{width:100%;margin-top:16px;min-height:48px}
+.search-empty{padding:12px 14px;border:1px dashed #aebbc9;border-radius:14px;background:#fbfcfe;color:#526173}
+@media(max-width:760px){
+  .buy-grid{grid-template-columns:1fr 1fr}
+  .buy-search-row{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .buy-grid{grid-template-columns:1fr}
+}

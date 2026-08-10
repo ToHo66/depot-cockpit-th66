@@ -40,12 +40,67 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='5.2.2';;;;;
+const APP_VERSION='5.3';;;;;;
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
 const STORE='th66-professional-master-v3';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
 const MARKET_CACHE='th66-professional-market-cache-v323';
 const REQUEST_GUARD='th66-eodhd-request-guard-v521';
+const MARKET_SOURCE_PREF='th66-market-source-pref-v53';
+const CENTRAL_MARKET_CACHE='th66-central-market-cache-v53';
+const INSTRUMENT_MASTER_CACHE='th66-instrument-master-v53';
+const MARKET_CACHE_TTL_MS=15*60*1000;
+
+function readJsonStorage(key,fallback=null){
+  try{return JSON.parse(localStorage.getItem(key)||'null')??fallback}catch{return fallback}
+}
+function writeJsonStorage(key,value){
+  localStorage.setItem(key,JSON.stringify(value))
+}
+function marketSourcePreference(){
+  return readJsonStorage(MARKET_SOURCE_PREF,{primary:'XETRA_DELAYED',fallbacks:['TRADEGATE_DELAYED','FRANKFURT_DELAYED','EODHD']})
+}
+function readCentralMarketCache(){
+  const x=readJsonStorage(CENTRAL_MARKET_CACHE,{items:{},savedAt:null});
+  return x&&typeof x==='object'?x:{items:{},savedAt:null}
+}
+function centralMarketCacheFresh(){
+  const x=readCentralMarketCache();
+  if(!x.savedAt)return false;
+  return Date.now()-new Date(x.savedAt).getTime()<MARKET_CACHE_TTL_MS
+}
+function mergeMarketItems(items,sourceMeta={}){
+  const cache=readCentralMarketCache();
+  cache.items={...(cache.items||{})};
+  for(const item of (items||[])){
+    if(!item?.id||!Number.isFinite(Number(item?.latest?.price)))continue;
+    cache.items[item.id]={
+      ...item,
+      sourceMeta:{
+        ...(item.sourceMeta||{}),
+        ...sourceMeta,
+        receivedAt:new Date().toISOString()
+      }
+    };
+    state.data[item.id]=cache.items[item.id]
+  }
+  cache.savedAt=new Date().toISOString();
+  writeJsonStorage(CENTRAL_MARKET_CACHE,cache);
+  state.updatedAt=cache.savedAt
+}
+function restoreCentralMarketCache(){
+  const cache=readCentralMarketCache();
+  if(!cache?.items)return false;
+  let count=0;
+  for(const [id,item] of Object.entries(cache.items)){
+    if(item?.ok&&Number.isFinite(Number(item?.latest?.price))){
+      state.data[id]=item;count++
+    }
+  }
+  if(count)state.updatedAt=cache.savedAt||state.updatedAt;
+  return count>0
+}
+
 function localDay(){return new Date().toISOString().slice(0,10)}
 function readRequestGuard(){
   try{
@@ -436,7 +491,7 @@ async function runSystemDiagnosis(){
       `Aktuelle lokale Kursreihen: ${current}/11`,
       `Heute bereits angefragte Positionen: ${guard.requestedIds.length}`,
       `EODHD-Limit heute erkannt: ${guard.rateLimited?'Ja':'Nein'}`,
-      'Die Systemprüfung selbst führt keine EODHD-Kursabfrage mehr aus.'
+      'Die Systemprüfung selbst führt keine Markt-Kursabfrage aus.'
     ],health.response.ok&&h.eodhdConfigured?'success':'error');
   }catch(error){
     showDiagnostic('Systemprüfung abgebrochen',[
@@ -449,93 +504,66 @@ async function runSystemDiagnosis(){
 }
 async function refresh(){
   const b=$('#refreshBtn');
-  const guard=readRequestGuard();
-
-  if(guard.rateLimited){
-    showDiagnostic('Heute keine weitere Kursabfrage',[
-      'EODHD hat das Tageslimit bereits gemeldet.',
-      'Weitere Klicks würden keine neuen Daten liefern und werden deshalb blockiert.',
-      'Die zuletzt erfolgreichen Kurswerte bleiben erhalten.'
-    ],'error');
-    return
-  }
-
-  const all=state.positions.filter(p=>p.dataSource==='EODHD');
-  const pending=all.filter(p=>!dataIsCurrentToday(p.id)&&!guard.requestedIds.includes(p.id));
-
-  if(!pending.length){
-    const current=all.filter(p=>dataIsCurrentToday(p.id)).length;
-    showDiagnostic('Keine unnötige Abfrage ausgeführt',[
-      `Aktuelle Kursreihen: ${current}/${all.length}`,
-      'Alle heute bereits erfolgreichen oder bereits angefragten Positionen wurden geschützt.',
-      'Damit werden keine API-Aufrufe doppelt verbraucht.'
+  if(centralMarketCacheFresh()){
+    restoreCentralMarketCache();
+    render();
+    showDiagnostic('Zentraler Kurscache aktiv',[
+      'Der vorhandene Kursstand ist jünger als 15 Minuten.',
+      'Es wurde keine neue externe Börsenabfrage ausgelöst.',
+      `Gespeicherte Kursreihen: ${Object.keys(readCentralMarketCache().items||{}).length}`
     ],'success');
     return
   }
 
   b.disabled=true;b.textContent='…';
-  showDiagnostic('Gezielte Kursaktualisierung läuft',[
-    `Es werden nur ${pending.length} fehlende oder veraltete Positionen angefragt.`,
-    'Pro Position wird exakt ein festes EODHD-Symbol verwendet.',
-    'Bei HTTP 402 stoppt der Server sofort.'
+  showDiagnostic('Marktdaten werden aktualisiert',[
+    'Primärquelle: Deutsche Börse/Xetra Delayed.',
+    'Ziel: ein zentraler Kursstand für Mac und iPhone.',
+    'Fallback nur wenn ein Instrument nicht über Xetra auflösbar ist.'
   ]);
 
   try{
-    const positions=pending.map(p=>({
-      ...p,
-      brokerVenue:p.analysisVenue,
-      analysisVenue:p.analysisVenue,
-      candidates:venueCandidates(p).slice(0,1)
-    }));
+    const positions=state.positions
+      .filter(p=>p.broker==='sBroker' || p.dataSource==='XETRA_DELAYED' || p.dataSource==='EODHD')
+      .map(p=>({
+        id:p.id,name:p.name,isin:p.isin,wkn:p.wkn||'',mnemonic:p.mnemonic||p.analysisSymbol||p.marketSymbol||'',
+        venue:p.analysisVenue||p.brokerVenue||'Xetra',currency:p.currency||'EUR'
+      }));
 
-    guard.lastAttempt=new Date().toISOString();
-    guard.requestedIds=[...new Set([...guard.requestedIds,...positions.map(p=>p.id)])];
-    writeRequestGuard(guard);
-
-    const {response:r,body:x}=await fetchJsonWithTimeout('/api/market-data',{
+    const {response:r,body:x}=await fetchJsonWithTimeout('/api/market-data-v2',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({positions})
     },20000);
 
-    if(!r.ok||!x.ok)throw Object.assign(new Error(x.error||`Datenabruf fehlgeschlagen (${r.status})`),{code:x.code});
+    if(!r.ok||!x.ok)throw new Error(x.error||`Marktdatenabruf fehlgeschlagen (${r.status})`);
 
-    const merged={...state.data};
-    for(const result of (x.results||[])){
-      if(result.ok)merged[result.id]=result;
-    }
-    state.data=merged;
-    state.updatedAt=x.generatedAt;
-    saveMarketCache();
+    mergeMarketItems(x.results||[],{
+      provider:x.provider||'DB_XETRA_DELAYED',
+      delayedMinutes:x.delayedMinutes??15,
+      generatedAt:x.generatedAt
+    });
     render();
+    const good=(x.results||[]).filter(v=>v.ok).length;
+    const fallback=(x.results||[]).filter(v=>v.sourceMeta?.fallback).length;
 
-    const good=(x.results||[]).filter(y=>y.ok).length;
-    const rateLimited=(x.results||[]).some(y=>y.code==='RATE_LIMIT')||x.rateLimited;
-    if(rateLimited){
-      const latest=readRequestGuard();
-      latest.rateLimited=true;
-      writeRequestGuard(latest);
-    }
-
-    showDiagnostic(rateLimited?'EODHD-Tageslimit erreicht':'Kursaktualisierung beendet',[
-      `Neu erfolgreich: ${good}/${positions.length}`,
-      `Heute nicht erneut abgefragt: ${all.length-positions.length}`,
-      `Gesamt mit vorhandenen Daten: ${all.filter(p=>state.data[p.id]?.ok).length}/${all.length}`,
-      `Serverversion: ${x.version||'–'}`,
-      rateLimited?'Weitere Abfragen sind für heute gesperrt.':'Keine Doppelabfragen ausgeführt.'
-    ],rateLimited?'error':'success');
-
-    toast(`${good} neue Kursreihen geladen`);
+    showDiagnostic('Marktdaten aktualisiert',[
+      `Erfolgreich: ${good}/${positions.length}`,
+      `Quelle: ${x.provider||'Deutsche Börse / Xetra Delayed'}`,
+      `Verzögerung: ${x.delayedMinutes??15} Minuten`,
+      `Fallbacks: ${fallback}`,
+      `Stand: ${x.generatedAt||new Date().toISOString()}`
+    ],good?'success':'error');
+    toast(`${good}/${positions.length} Kurse aktualisiert`);
   }catch(e){
-    if(/402|daily API requests limit|rate.?limit/i.test(e.message||'')){
-      const latest=readRequestGuard();latest.rateLimited=true;writeRequestGuard(latest);
-    }
-    showDiagnostic('Kursaktualisierung fehlgeschlagen',[
+    restoreCentralMarketCache();
+    render();
+    showDiagnostic('Marktdaten konnten nicht aktualisiert werden',[
       `Fehler: ${e.message||String(e)}`,
-      'Bereits vorhandene Kurswerte wurden nicht gelöscht.',
-      'Weitere Doppelabfragen werden verhindert.'
+      'Ein vorhandener zentraler Kursstand bleibt erhalten.',
+      'EODHD wird nicht automatisch für jede Position nachgeladen.'
     ],'error');
-    toast('Marktdaten konnten nicht geladen werden');
+    toast('Kursaktualisierung fehlgeschlagen');
   }finally{
     b.disabled=false;b.textContent='↻'
   }
@@ -568,7 +596,191 @@ function applyPositionFilter(label){
     card.hidden=!(key==='alle'||!key||type.includes(key.replace('etfs','etf').replace('aktien','aktie').replace('rohstoffe','rohstoff')));
   });
 }
-function wire(){$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#diagnoseBtn').onclick=runSystemDiagnosis;
+
+function normalizeSearchText(v){
+  return String(v||'').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').trim()
+}
+function localInstrumentMaster(){
+  const cached=readJsonStorage(INSTRUMENT_MASTER_CACHE,null);
+  const seeded=state.positions.map(p=>({
+    name:p.name,
+    isin:p.isin,
+    wkn:p.wkn||'',
+    mnemonic:p.mnemonic||p.marketSymbol||'',
+    type:p.assetType||p.type||'Wertpapier',
+    currency:p.currency||'EUR',
+    venue:p.analysisVenue||p.brokerVenue||'Xetra',
+    source:'DEPOT'
+  }));
+  return cached?.items?.length?cached.items:seeded
+}
+async function searchInstrumentMaster(query){
+  const q=normalizeSearchText(query);
+  if(!q)return [];
+  // 1) server-side instrument master if available
+  try{
+    const {response,body}=await fetchJsonWithTimeout(`/api/instrument-search?q=${encodeURIComponent(query)}`,{},8000);
+    if(response.ok&&body?.ok&&Array.isArray(body.results)&&body.results.length){
+      return body.results
+    }
+  }catch{}
+  // 2) local fallback
+  const items=localInstrumentMaster();
+  return items.filter(item=>{
+    const hay=[item.name,item.isin,item.wkn,item.mnemonic,item.type].map(normalizeSearchText).join(' ');
+    return hay.includes(q)
+  }).slice(0,20)
+}
+function selectedBuyInstrument(){
+  return state.__selectedBuyInstrument||null
+}
+function setSelectedBuyInstrument(item){
+  state.__selectedBuyInstrument=item||null;
+  const box=$('#buyInstrumentSelected');
+  if(!box)return;
+  if(!item){
+    box.innerHTML='<span class="muted">Noch kein Instrument gewählt. Freie Eingabe ist jederzeit möglich.</span>';
+    return
+  }
+  box.innerHTML=`<div class="instrument-selected">
+    <b>${item.name||'Unbenanntes Wertpapier'}</b>
+    <span>${item.isin||'keine ISIN'} · ${item.wkn||'keine WKN'} · ${item.mnemonic||'kein Kürzel'}</span>
+    <span>${item.type||'Wertpapier'} · ${item.currency||'EUR'} · ${item.venue||'Xetra'}</span>
+  </div>`
+}
+async function runBuyInstrumentSearch(){
+  const input=$('#buyInstrumentQuery');
+  const resultsBox=$('#buyInstrumentResults');
+  if(!input||!resultsBox)return;
+  const query=input.value.trim();
+  if(!query){
+    resultsBox.innerHTML='<div class="search-empty">Bitte Name, ISIN, WKN oder Kürzel eingeben.</div>';
+    return
+  }
+  resultsBox.innerHTML='<div class="search-empty">Suche läuft …</div>';
+  const results=await searchInstrumentMaster(query);
+  if(!results.length){
+    resultsBox.innerHTML=`<div class="search-empty">
+      Kein Treffer im Instrument-Master. Du kannst das Papier trotzdem frei anlegen.
+      <button type="button" id="useFreeEntryBtn" class="secondary">Freie Eingabe verwenden</button>
+    </div>`;
+    $('#useFreeEntryBtn').onclick=()=>{
+      setSelectedBuyInstrument({
+        name:query,isin:'',wkn:'',mnemonic:'',type:'Wertpapier',currency:'EUR',venue:'Manuell',source:'MANUAL'
+      });
+      resultsBox.innerHTML='';
+      syncBuyFieldsFromInstrument(selectedBuyInstrument());
+    };
+    return
+  }
+  resultsBox.innerHTML=results.map((item,i)=>`<button type="button" class="instrument-result" data-instrument-index="${i}">
+    <b>${item.name||'Unbenannt'}</b>
+    <span>${item.isin||'–'} · ${item.wkn||'–'} · ${item.mnemonic||'–'}</span>
+    <span>${item.type||'Wertpapier'} · ${item.currency||'EUR'} · ${item.venue||'Xetra'}</span>
+  </button>`).join('');
+  resultsBox.querySelectorAll('[data-instrument-index]').forEach(btn=>{
+    btn.onclick=()=>{
+      const item=results[Number(btn.dataset.instrumentIndex)];
+      setSelectedBuyInstrument(item);
+      syncBuyFieldsFromInstrument(item);
+      resultsBox.innerHTML='';
+    }
+  })
+}
+function syncBuyFieldsFromInstrument(item){
+  if(!item)return;
+  const mapping={
+    buyName:item.name||'',
+    buyIsin:item.isin||'',
+    buyWkn:item.wkn||'',
+    buyMnemonic:item.mnemonic||'',
+    buyType:item.type||'Wertpapier',
+    buyCurrency:item.currency||'EUR',
+    buyVenue:item.venue||'Xetra'
+  };
+  for(const [id,value] of Object.entries(mapping)){
+    const el=document.getElementById(id);
+    if(el&&!el.value)el.value=value
+  }
+}
+function collectOpenBuyInstrument(){
+  const selected=selectedBuyInstrument()||{};
+  const val=id=>document.getElementById(id)?.value?.trim()||'';
+  return {
+    name:val('buyName')||selected.name||'Unbenanntes Wertpapier',
+    isin:val('buyIsin')||selected.isin||'',
+    wkn:val('buyWkn')||selected.wkn||'',
+    mnemonic:val('buyMnemonic')||selected.mnemonic||'',
+    type:val('buyType')||selected.type||'Wertpapier',
+    currency:val('buyCurrency')||selected.currency||'EUR',
+    venue:val('buyVenue')||selected.venue||'Manuell',
+    source:selected.source||'MANUAL'
+  }
+}
+function ensureBoughtInstrumentInDepot(instrument,qty,price,fees,broker,date){
+  let p=state.positions.find(x=>instrument.isin&&x.isin===instrument.isin);
+  if(!p){
+    p=normalizePosition({
+      id:`custom-${Date.now()}`,
+      name:instrument.name,
+      isin:instrument.isin||`MANUAL-${Date.now()}`,
+      wkn:instrument.wkn||'',
+      mnemonic:instrument.mnemonic||'',
+      assetType:instrument.type||'Wertpapier',
+      type:instrument.type||'Wertpapier',
+      qty:0,
+      broker:broker||'sBroker',
+      dataSource:instrument.source==='MANUAL'?'MANUAL':'XETRA_DELAYED',
+      brokerDisplaySource:instrument.venue||'Manuell',
+      analysisVenue:instrument.venue||'Xetra',
+      analysisSymbol:instrument.mnemonic||'',
+      marketSymbol:instrument.mnemonic||'',
+      currency:instrument.currency||'EUR',
+      purchasePrice:Number(price)||0,
+      fallbackVenues:['Tradegate','Frankfurt']
+    });
+    state.positions.push(p)
+  }
+  p.qty=Number(p.qty||0)+Number(qty||0);
+  if(Number(price)>0)p.purchasePrice=Number(price);
+  state.transactions.unshift({
+    id:`tx-${Date.now()}`,
+    type:'BUY',
+    date:date||new Date().toISOString().slice(0,10),
+    positionId:p.id,
+    name:p.name,
+    isin:p.isin,
+    qty:Number(qty||0),
+    price:Number(price||0),
+    fees:Number(fees||0),
+    broker:broker||p.broker,
+    instrumentMeta:instrument
+  });
+  save();
+  render();
+  return p
+}
+function wire(){
+  const buySearchBtn=$('#buyInstrumentSearchBtn');
+  const buyOpenBtn=$('#buyOpenInstrumentBtn');
+  if(buyOpenBtn)buyOpenBtn.onclick=()=>{
+    const instrument=collectOpenBuyInstrument();
+    const num=id=>parseNum(document.getElementById(id)?.value);
+    const qty=num('buyQty'),price=num('buyPrice'),fees=num('buyFees')||0;
+    if(!Number.isFinite(qty)||qty<=0||!Number.isFinite(price)||price<=0){
+      toast('Bitte Stückzahl und Kaufkurs eingeben');return
+    }
+    const broker=$('#buyBroker')?.value||'sBroker';
+    const date=$('#buyDate')?.value||new Date().toISOString().slice(0,10);
+    const p=ensureBoughtInstrumentInDepot(instrument,qty,price,fees,broker,date);
+    toast(`${p.name} wurde dem Depot hinzugefügt`);
+    setSelectedBuyInstrument(null);
+  };
+
+  if(buySearchBtn)buySearchBtn.onclick=runBuyInstrumentSearch;
+  const buyQuery=$('#buyInstrumentQuery');
+  if(buyQuery)buyQuery.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runBuyInstrumentSearch()}});
+$$('.bottom-nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));$$('[data-target-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.targetPage));$$('.transaction-type button').forEach(b=>b.onclick=()=>{$$('.transaction-type button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#txType').value=b.dataset.tx});$$('.broker-tab').forEach(b=>b.onclick=()=>{$$('.broker-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const filter=b.dataset.brokerFilter;$$('.position-card').forEach(c=>{const id=c.querySelector('.position-summary h3')?.textContent;const p=state.positions.find(x=>x.name===id);c.style.display=filter==='all'||p?.broker===filter?'':'none'})});$('#refreshBtn').onclick=refresh;$('#diagnoseBtn').onclick=runSystemDiagnosis;
   bindClickableGroup('[data-analysis-tab]',applyPerformanceFilter);
   bindClickableGroup('[data-position-filter]',applyPositionFilter);
   document.querySelectorAll('[data-open-all]').forEach(button=>{
@@ -585,7 +797,7 @@ state.settings.sbrokerReferenceUpdatedAt=Number.isFinite(sbRef)&&sbRef>0?new Dat
 const trRef=parseNum($('#trReference').value);
 state.settings.trReference=Number.isFinite(trRef)&&trRef>0?trRef:null;
 state.settings.trReferenceUpdatedAt=Number.isFinite(trRef)&&trRef>0?new Date().toISOString():null;save();render();toast('Manuelle Broker-Referenzen gespeichert')};$('#saveBrokerPositionValues').onclick=()=>{$$('.broker-position-value-input').forEach(i=>{const p=state.positions.find(x=>x.id===i.dataset.id);const n=parseNum(i.value);if(Number.isFinite(n)&&p?.qty>0){state.settings.brokerPositionValues[p.id]=n;state.settings.brokerPrices[p.id]=n/p.qty}else{delete state.settings.brokerPositionValues[i.dataset.id]}});const sbVals=state.positions.filter(p=>p.broker==='sBroker').map(p=>brokerPositionValue(p)).filter(Number.isFinite);if(sbVals.length===state.positions.filter(p=>p.broker==='sBroker').length){state.settings.sbrokerReference=sbVals.reduce((a,b)=>a+b,0);state.settings.sbrokerReferenceUpdatedAt=new Date().toISOString()}save();render();toast('Broker-Positionswerte gespeichert')};$('#saveBrokerPrices').onclick=()=>{$$('.broker-input').forEach(i=>{const n=parseNum(i.value);if(Number.isFinite(n))state.settings.brokerPrices[i.dataset.id]=n;else delete state.settings.brokerPrices[i.dataset.id]});save();render();toast('Brokerkurse gespeichert')};$('#savePositionSettings').onclick=()=>{$$('.editor-card').forEach(card=>{const p=state.positions.find(x=>x.id===card.dataset.id);card.querySelectorAll('[data-field]').forEach(el=>{const f=el.dataset.field;let v=el.value;if(['qty','purchasePrice'].includes(f))v=parseNum(v);if(f==='fallbackVenues')v=String(v).split(',').map(x=>x.trim()).filter(Boolean);p[f]=v});p.venueSymbols={...(p.venueSymbols||{})};card.querySelectorAll('[data-venue-symbol]').forEach(el=>{const venue=el.dataset.venueSymbol;const value=el.value.trim();if(value)p.venueSymbols[venue]=value;else delete p.venueSymbols[venue]});p.marketSymbol=p.analysisSymbol||p.marketSymbol;normalizePosition(p)});save();render();toast('Stammdaten gespeichert')};$('#addPosition').onclick=()=>{const name=$('#newName').value.trim(),isin=$('#newIsin').value.trim().toUpperCase(),qty=parseNum($('#newQty').value);if(!name||!isin||!Number.isFinite(qty)){toast('Name, ISIN und Stückzahl fehlen');return}state.positions.push(normalizePosition({id:uid(),name,isin,wkn:$('#newWkn').value.trim().toUpperCase(),qty,purchasePrice:parseNum($('#newPurchasePrice').value),broker:$('#newBroker').value,brokerDisplaySource:$('#newVenue').value,analysisVenue:'Xetra',fallbackVenues:$('#newFallbackVenues').value.split(',').map(x=>x.trim()).filter(Boolean),dataSource:$('#newSource').value,analysisSymbol:$('#newSymbol').value.trim(),currency:'EUR'}));save();render();toast('Position hinzugefügt')};$('#exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({version:APP_VERSION,exportedAt:new Date().toISOString(),positions:state.positions,archive:state.archive,transactions:state.transactions,settings:state.settings},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`depot-cockpit-sicherung-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href)};$('#importInput').onchange=async e=>{try{const x=JSON.parse(await e.target.files[0].text());if(!Array.isArray(x.positions)||!x.settings)throw new Error();state.positions=x.positions;state.archive=x.archive||[];state.transactions=x.transactions||[];state.settings={...state.settings,...x.settings,brokerPrices:{...(x.settings.brokerPrices||{})},brokerPositionValues:{...(x.settings.brokerPositionValues||{})}};save();render();toast('Sicherung importiert')}catch{toast('Ungültige Sicherungsdatei')}};$('#resetBtn').onclick=()=>{if(confirm('Lokale Stammdaten, Brokerwerte und Archiv wirklich zurücksetzen?')){localStorage.removeItem(STORE);state.positions=structuredClone(DEFAULT_POSITIONS);state.archive=[];state.transactions=[];state.settings={sbrokerReference:null,sbrokerReferenceUpdatedAt:null,trReference:null,trReferenceUpdatedAt:null,brokerPrices:{},brokerPositionValues:{},venuePriority:['Tradegate','gettex','Lang & Schwarz','Xetra','Stuttgart','Frankfurt']};state.data={};render();toast('Lokale Daten zurückgesetzt')}}}
-load();loadMarketCache();wire();render();
+load();restoreCentralMarketCache();loadMarketCache();wire();render();
 showDiagnostic('Version 5.2.1 bereit',[
   'Die Oberfläche ist aktiv.',
   'Die Systemprüfung prüft Vercel und den API-Key, ohne EODHD-Kontingent zu verbrauchen.',
