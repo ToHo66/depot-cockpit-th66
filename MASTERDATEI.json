@@ -1,5 +1,5 @@
 {
-  "version": "5.3.1",
+  "version": "5.3.2",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -195,7 +195,7 @@
     ]
   },
   "recoveryNote": "Unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand. Keine spätere Cache-, Timeout- oder Startlogik enthalten.",
-  "release": "Xetra Delayed Live + Transaktionsfix",
+  "release": "iPhone First + Xetra Parser Deep Fix",
   "development_policy": {
     "golden_master": true,
     "one_change_per_release": true,
@@ -239,10 +239,11 @@
     "autoCreateDepotPosition": true
   },
   "fixes": [
-    "echter offizieller MFS GZ/JSON-Abruf",
-    "Kaufmaske nur unter Transaktion",
-    "vollständiger Xetra-Instrument-Master",
-    "15-Minuten-Cache",
-    "keine EODHD-Diagnoseabfrage"
+    "Xetra-Parser verarbeitet sowohl JSON als auch NDJSON-Bundles",
+    "Parser durchsucht komplette verschachtelte Trade-Events statt nur flache Teilobjekte",
+    "Matching über ISIN, WKN, Mnemonic und vorhandene Instrument-IDs",
+    "Preis/MIC/Zeit werden rekursiv aus verschachtelten Feldern ermittelt",
+    "iPhone ist verbindliches Primärlayout; horizontales Desktop-Canvas wird verhindert",
+    "Schnellprüfung und Depot-Differenzprüfer brechen auf dem iPhone sauber um"
   ]
 }
