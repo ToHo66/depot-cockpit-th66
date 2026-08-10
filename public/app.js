@@ -27,28 +27,28 @@ function venueCandidates(p){
   return c
 }
 const DEFAULT_POSITIONS=[
-{id:'allworld',name:'Vanguard FTSE All-World',isin:'IE00BK5BQT80',wkn:'A2PKXG',qty:327,broker:'sBroker',brokerDisplaySource:'Société Générale',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Xetra','Lang & Schwarz'],dataSource:'EODHD',analysisSymbol:'VGWL.XETRA',currency:'EUR',purchasePrice:157.422},
-{id:'defence',name:'Future of Defence',isin:'IE000OJ5TQP4',wkn:'A3EB9T',qty:1518,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'ASWC.XETRA',currency:'EUR',purchasePrice:14.75},
-{id:'banks',name:'Amundi STOXX Europe 600 Banks',isin:'LU1834983477',wkn:'LYX01W',qty:310,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Xetra','Stuttgart'],dataSource:'EODHD',analysisSymbol:'LBNK.XETRA',currency:'EUR',purchasePrice:45.115},
-{id:'metals',name:'iShares Essential Metals Producers',isin:'IE000ROSD5J6',wkn:'A3ERLP',qty:1850,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'CEBT.XETRA',currency:'EUR',purchasePrice:7.093},
-{id:'worldit',name:'iShares MSCI World Information Technology',isin:'IE00BJ5JNY98',wkn:'A2PHCC',qty:780,broker:'sBroker',brokerDisplaySource:'Xetra',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Lang & Schwarz','Stuttgart'],dataSource:'EODHD',analysisSymbol:'AYEW.XETRA',currency:'EUR',purchasePrice:15.891},
-{id:'semiconductor',name:'VanEck Semiconductor',isin:'IE00BMC38736',wkn:'A2QC5J',qty:98,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'VVSM.XETRA',currency:'EUR',purchasePrice:89.377},
-{id:'sap',name:'SAP SE',isin:'DE0007164600',wkn:'716460',qty:60,broker:'sBroker',brokerDisplaySource:'Xetra',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Lang & Schwarz','Stuttgart'],dataSource:'EODHD',analysisSymbol:'SAP.XETRA',currency:'EUR',purchasePrice:250.417},
-{id:'fidelity',name:'Fidelity Global Quality Income',isin:'IE00BYXVGZ48',wkn:'A2DL7E',qty:580,broker:'sBroker',brokerDisplaySource:'Xetra',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Lang & Schwarz','Stuttgart'],dataSource:'EODHD',analysisSymbol:'FGEQ.XETRA',currency:'EUR',purchasePrice:9.855},
-{id:'cyber',name:'L&G Cyber Security',isin:'IE00BYPLS672',wkn:'A14WU5',qty:141,broker:'sBroker',brokerDisplaySource:'Euronext Paris',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Lang & Schwarz','Xetra'],dataSource:'EODHD',analysisSymbol:'USPY.XETRA',currency:'EUR',purchasePrice:33.329},
-{id:'gold',name:'Xetra-Gold',isin:'DE000A0S9GB0',wkn:'A0S9GB',qty:35,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Xetra','Tradegate','Stuttgart'],dataSource:'EODHD',analysisSymbol:'4GLD.XETRA',currency:'EUR',purchasePrice:117.846},
-{id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
-{id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
+{id:'allworld',name:'Vanguard FTSE All-World',isin:'IE00BK5BQT80',wkn:'A2PKXG',qty:327,broker:'sBroker',brokerDisplaySource:'Société Générale',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'VGWL',currency:'EUR',purchasePrice:157.422},
+{id:'defence',name:'Future of Defence',isin:'IE000OJ5TQP4',wkn:'A3EB9T',qty:1518,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'ASWC',currency:'EUR',purchasePrice:14.75},
+{id:'banks',name:'Amundi STOXX Europe 600 Banks',isin:'LU1834983477',wkn:'LYX01W',qty:310,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'LBNK',currency:'EUR',purchasePrice:45.115},
+{id:'metals',name:'iShares Essential Metals Producers',isin:'IE000ROSD5J6',wkn:'A3ERLP',qty:1850,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'CEBT',currency:'EUR',purchasePrice:7.093},
+{id:'worldit',name:'iShares MSCI World Information Technology',isin:'IE00BJ5JNY98',wkn:'A2PHCC',qty:780,broker:'sBroker',brokerDisplaySource:'Xetra',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'AYEW',currency:'EUR',purchasePrice:15.891},
+{id:'semiconductor',name:'VanEck Semiconductor',isin:'IE00BMC38736',wkn:'A2QC5J',qty:98,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'VVSM',currency:'EUR',purchasePrice:89.377},
+{id:'sap',name:'SAP SE',isin:'DE0007164600',wkn:'716460',qty:60,broker:'sBroker',brokerDisplaySource:'Xetra',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'SAP',currency:'EUR',purchasePrice:250.417},
+{id:'fidelity',name:'Fidelity Global Quality Income',isin:'IE00BYXVGZ48',wkn:'A2DL7E',qty:580,broker:'sBroker',brokerDisplaySource:'Xetra',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'FGEQ',currency:'EUR',purchasePrice:9.855},
+{id:'cyber',name:'L&G Cyber Security',isin:'IE00BYPLS672',wkn:'A14WU5',qty:141,broker:'sBroker',brokerDisplaySource:'Euronext Paris',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'USPY',currency:'EUR',purchasePrice:33.329},
+{id:'gold',name:'Xetra-Gold',isin:'DE000A0S9GB0',wkn:'A0S9GB',qty:35,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'4GLD',currency:'EUR',purchasePrice:117.846},
+{id:'ageing',name:'iShares Ageing Population',isin:'IE00BYZK4669',wkn:'A2ANH1',qty:150,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'AGED',currency:'EUR',purchasePrice:9.52},
+{id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Manuell',fallbackVenues:['Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='5.3.2';;;;;;;;
+const APP_VERSION='5.4.0';
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
-const STORE='th66-professional-master-v3';
+const STORE='th66-professional-master-v4';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
-const MARKET_CACHE='th66-professional-market-cache-v323';
+const MARKET_CACHE='th66-professional-market-cache-v540';
 const REQUEST_GUARD='th66-eodhd-request-guard-v521';
 const MARKET_SOURCE_PREF='th66-market-source-pref-v53';
-const CENTRAL_MARKET_CACHE='th66-central-market-cache-v53';
-const INSTRUMENT_MASTER_CACHE='th66-instrument-master-v53';
+const CENTRAL_MARKET_CACHE='th66-market-snapshot-v540';
+const INSTRUMENT_MASTER_CACHE='th66-instrument-master-v540';
 const MARKET_CACHE_TTL_MS=15*60*1000;
 
 function readJsonStorage(key,fallback=null){
@@ -58,7 +58,7 @@ function writeJsonStorage(key,value){
   localStorage.setItem(key,JSON.stringify(value))
 }
 function marketSourcePreference(){
-  return readJsonStorage(MARKET_SOURCE_PREF,{primary:'XETRA_DELAYED',fallbacks:['TRADEGATE_DELAYED','FRANKFURT_DELAYED','EODHD']})
+  return {primary:'DB_DELAYED',fallbacks:['XETRA_POSTTRADE','MANUAL']} // 5.4.0 fixed policy
 }
 function readCentralMarketCache(){
   const x=readJsonStorage(CENTRAL_MARKET_CACHE,{items:{},savedAt:null});
@@ -69,38 +69,28 @@ function centralMarketCacheFresh(){
   if(!x.savedAt)return false;
   return Date.now()-new Date(x.savedAt).getTime()<MARKET_CACHE_TTL_MS
 }
-function mergeMarketItems(items,sourceMeta={}){
-  const cache=readCentralMarketCache();
-  cache.items={...(cache.items||{})};
+function replaceMarketSnapshot(items,sourceMeta={},requestedIds=[]){
+  const receivedAt=new Date().toISOString();
+  const fresh={};
   for(const item of (items||[])){
     if(!item?.id||!Number.isFinite(Number(item?.latest?.price)))continue;
-    cache.items[item.id]={
-      ...item,
-      sourceMeta:{
-        ...(item.sourceMeta||{}),
-        ...sourceMeta,
-        receivedAt:new Date().toISOString()
-      }
-    };
-    state.data[item.id]=cache.items[item.id]
+    fresh[item.id]={...item,sourceMeta:{...(item.sourceMeta||{}),...sourceMeta,receivedAt}}
   }
-  cache.savedAt=new Date().toISOString();
-  writeJsonStorage(CENTRAL_MARKET_CACHE,cache);
-  state.updatedAt=cache.savedAt
+  state.data=fresh;
+  state.updatedAt=sourceMeta.generatedAt||receivedAt;
+  writeJsonStorage(CENTRAL_MARKET_CACHE,{schemaVersion:4,savedAt:receivedAt,updatedAt:state.updatedAt,requestedIds:[...requestedIds],items:fresh});
+  saveMarketCache()
 }
 function restoreCentralMarketCache(){
   const cache=readCentralMarketCache();
-  if(!cache?.items)return false;
-  let count=0;
-  for(const [id,item] of Object.entries(cache.items)){
-    if(item?.ok&&Number.isFinite(Number(item?.latest?.price))){
-      state.data[id]=item;count++
-    }
-  }
-  if(count)state.updatedAt=cache.savedAt||state.updatedAt;
-  return count>0
+  if(cache?.schemaVersion!==4||!cache?.items)return false;
+  const ids=new Set(state.positions.filter(p=>p.dataSource!=='MANUAL').map(p=>p.id));
+  const restored={};
+  for(const [id,item] of Object.entries(cache.items)) if(ids.has(id)&&item?.ok&&Number.isFinite(Number(item?.latest?.price))) restored[id]=item;
+  state.data=restored;
+  if(Object.keys(restored).length)state.updatedAt=cache.updatedAt||cache.savedAt||state.updatedAt;
+  return Object.keys(restored).length>0
 }
-
 function localDay(){return new Date().toISOString().slice(0,10)}
 function readRequestGuard(){
   try{
@@ -166,7 +156,12 @@ function load(){
   migrateLegacyStorage();
   try{
     const x=JSON.parse(localStorage.getItem(STORE)||'{}');
-    if(Array.isArray(x.positions)&&x.positions.length)state.positions=x.positions.map(normalizePosition);
+    if(Array.isArray(x.positions)&&x.positions.length){
+      const incoming=x.positions.filter(p=>p.id!=='datacenter').map(normalizePosition);
+      const byId=new Map(incoming.map(p=>[p.id,p]));
+      for(const d of DEFAULT_POSITIONS) if(!byId.has(d.id)&&d.id==='ageing') incoming.push(structuredClone(d));
+      state.positions=incoming
+    }
     if(Array.isArray(x.archive))state.archive=x.archive;
     if(Array.isArray(x.transactions))state.transactions=x.transactions;
     if(x.settings){
@@ -194,7 +189,7 @@ function valuationPrice(p){const manual=brokerPrice(p);return Number.isFinite(ma
 function positionValue(p){const price=valuationPrice(p);return Number.isFinite(price)?price*p.qty:null}
 function brokerTotal(name){const values=state.positions.filter(p=>p.broker===name).map(positionValue).filter(Number.isFinite);return values.length?values.reduce((a,b)=>a+b,0):null}
 function saveMarketCache(){try{localStorage.setItem(MARKET_CACHE,JSON.stringify({savedAt:new Date().toISOString(),updatedAt:state.updatedAt,data:state.data}))}catch{}}
-function loadMarketCache(){try{const x=JSON.parse(localStorage.getItem(MARKET_CACHE)||'null');if(!x?.savedAt||!x?.data)return;const age=Date.now()-new Date(x.savedAt).getTime();if(age<24*60*60*1000){state.data=x.data;state.updatedAt=x.updatedAt||x.savedAt}}catch{}}
+function loadMarketCache(){/* 5.4.0: legacy market caches intentionally ignored */}
 function marketDayContribution(p){const d=state.data[p.id];const latest=d?.latest?.price,previous=d?.performance?.day?.basePrice;if(!d?.ok||!Number.isFinite(latest)||!Number.isFinite(previous))return null;return (latest-previous)*p.qty}
 function chartSvg(points){if(!points?.length||points.length<2)return '<div class="chart-empty">Keine zusammenhängende Historie verfügbar</div>';const vals=points.map(x=>x.close),min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,w=600,h=150,pad=10;const coords=points.map((x,i)=>`${pad+(i/(points.length-1))*(w-2*pad)},${h-pad-((x.close-min)/range)*(h-2*pad)}`).join(' ');return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Kurschart"><polyline points="${coords}" fill="none" stroke="#2d63e2" stroke-width="4" vector-effect="non-scaling-stroke"/><line x1="10" y1="${h-10}" x2="${w-10}" y2="${h-10}" stroke="#dce4ee"/></svg>`}
 function venueOptions(selected){return VENUES.map(v=>`<option ${v===selected?'selected':''}>${v}</option>`).join('')}
@@ -246,10 +241,17 @@ function saveCourseManager(){
 }
 
 function render(){
-  const sb=brokerTotal('sBroker'),tr=brokerTotal('Trade Republic');
+  const sbPositions=state.positions.filter(p=>p.broker==='sBroker'), trPositions=state.positions.filter(p=>p.broker==='Trade Republic');
+  const sbValued=sbPositions.filter(p=>Number.isFinite(positionValue(p))), trValued=trPositions.filter(p=>Number.isFinite(positionValue(p)));
+  const sbComplete=sbValued.length===sbPositions.length, trComplete=trValued.length===trPositions.length;
+  const sb=sbComplete&&sbPositions.length?sbValued.reduce((a,p)=>a+positionValue(p),0):null;
+  const tr=trComplete&&trPositions.length?trValued.reduce((a,p)=>a+positionValue(p),0):null;
   const valued=state.positions.filter(p=>Number.isFinite(positionValue(p)));
-  const total=valued.length?valued.reduce((sum,p)=>sum+positionValue(p),0):null;
-  $('#sbrokerValue').textContent=eur(sb);$('#trValue').textContent=eur(tr);$('#totalValue').textContent=eur(total);
+  const totalComplete=valued.length===state.positions.length;
+  const total=totalComplete?valued.reduce((sum,p)=>sum+positionValue(p),0):null;
+  $('#sbrokerValue').textContent=sbComplete?eur(sb):`Teilbewertung ${sbValued.length}/${sbPositions.length}`;
+  $('#trValue').textContent=trComplete?eur(tr):`Teilbewertung ${trValued.length}/${trPositions.length}`;
+  $('#totalValue').textContent=totalComplete?eur(total):`Teilbewertung ${valued.length}/${state.positions.length}`;
   $('#sbrokerCount').textContent=`${state.positions.filter(p=>p.broker==='sBroker').length} Positionen`;
   $('#trCount').textContent=`${state.positions.filter(p=>p.broker==='Trade Republic').length} Positionen`;
   const available=state.positions.filter(p=>state.data[p.id]?.ok||Number.isFinite(brokerPrice(p))).length;
@@ -272,7 +274,7 @@ function render(){
   if($('#chartHeadline')){$('#chartHeadline').textContent=pc(day);$('#chartHeadline').className=cls(day)}
   const refDate=state.settings.sbrokerReferenceUpdatedAt?new Date(state.settings.sbrokerReferenceUpdatedAt).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}):'Datum unbekannt';
   const deviation=Number.isFinite(sb)&&Number.isFinite(state.settings.sbrokerReference)?sb-state.settings.sbrokerReference:null;
-  $('#valuationNote').textContent=Number.isFinite(state.settings.sbrokerReference)?`S Broker Referenz (manuell, ${refDate}) ${eur(state.settings.sbrokerReference)} · Abweichung ${eur(deviation)}`:'Bewertung: manueller Brokerkurs hat Vorrang, sonst letzter EOD-Schlusskurs';
+  $('#valuationNote').textContent=Number.isFinite(state.settings.sbrokerReference)?`S Broker Referenz (manuell, ${refDate}) ${eur(state.settings.sbrokerReference)} · Abweichung ${eur(deviation)}`:'Bewertung: manueller Brokerkurs hat Vorrang, sonst aktueller Delayed-Snapshot';
   renderMarketToday();renderOverviewPositions();renderReconciliationSummary();renderDiagnostics();renderPositions();renderAnalysis();renderBrokerComparison();renderManage();renderCourseManager();renderTransactions()
 }
 
@@ -317,7 +319,7 @@ function renderDiagnostics(){
 
 function renderOverviewPositions(){const box=$('#overviewPositions');if(!box)return;const rows=state.positions.map(p=>({p,value:positionValue(p),pct:state.data[p.id]?.performance?.day?.pct})).sort((a,b)=>(b.value||0)-(a.value||0)).slice(0,5);box.innerHTML=rows.map(x=>`<div class="compact-position"><div><b>${x.p.name}</b><small>${x.p.qty.toLocaleString('de-DE')} Stück · ${x.p.broker}</small></div><div class="value-col"><b>${eur(x.value)}</b><small class="${cls(x.pct)}">${pc(x.pct)}</small></div></div>`).join('')}
 function renderMarketToday(){const rows=state.positions.map(p=>({p,v:marketDayContribution(p),pct:state.data[p.id]?.performance?.day?.pct})).filter(x=>Number.isFinite(x.v)).sort((a,b)=>b.v-a.v);if(!rows.length){$('#marketToday').innerHTML='<p class="muted">Nach der ersten Aktualisierung verfügbar.</p>';return}const top=rows.slice(0,2),bottom=[...rows].sort((a,b)=>a.v-b.v).slice(0,2);$('#marketToday').innerHTML=[...top,...bottom].map(x=>`<div class="market-row"><div><b>${x.p.name}</b><small class="muted">${pc(x.pct)}</small></div><strong class="${cls(x.v)}">${eur(x.v)}</strong></div>`).join('')}
-function renderPositions(){$('#positionList').innerHTML=['sBroker','Trade Republic'].map(broker=>{const ps=state.positions.filter(p=>p.broker===broker);if(!ps.length)return '';return `<h3 class="broker-title">${broker}</h3>`+ps.map(p=>{const d=state.data[p.id],manual=brokerPrice(p),price=valuationPrice(p),val=positionValue(p),perf=d?.performance||{},status=d?.ok?'ok':Number.isFinite(manual)?'warn':d?'error':'warn',statusText=d?.ok?(Number.isFinite(manual)?'Brokerkurs + EOD-Historie':(d?.sourceMeta?.provider==='DB_XETRA_DELAYED'?'Xetra 15 Min geladen':'EODHD geladen')):Number.isFinite(manual)?'Nur Brokerkurs':d?.error||'Noch nicht geladen';return `<article class="position-card"><div class="position-summary"><div><h3>${p.name}</h3><p>${p.qty.toLocaleString('de-DE')} Stück · ${p.isin}${p.wkn?` · ${p.wkn}`:''}</p><span class="badge ${status}">${statusText}</span></div><div class="price"><strong>${eur(price,price<20?3:2)}</strong><small>${eur(val)}</small></div></div><div class="position-details"><div class="meta-grid"><div class="meta-box"><span>Broker</span><strong>${p.broker}</strong></div><div class="meta-box"><span>Broker-Anzeigequelle</span><strong>${p.brokerDisplaySource||'–'}</strong></div><div class="meta-box"><span>Feste Analysebörse</span><strong>${p.analysisVenue||'–'}</strong></div><div class="meta-box"><span>Alternativen / Datenquelle</span><strong>${(p.fallbackVenues||[]).join(' → ')||'–'}<br>${p.dataSource}${p.marketSymbol?` · ${p.marketSymbol}`:''}</strong></div></div><div class="perf-grid">${[['Tag',perf.day],['Woche',perf.week],['Monat',perf.month],['3 Monate',perf.threeMonths],['1 Jahr',perf.year]].map(([n,x])=>{const available=Number.isFinite(x?.pct)&&Number.isFinite(x?.basePrice)&&x?.baseDate;return `<div class="perf-box${available?'':' unavailable'}"><span>${n}</span>${available?`<strong class="${cls(x.pct)}">${pc(x.pct)}</strong><small>${x.baseDate} · ${eur(x.basePrice,3)}</small>`:`<strong>–</strong><small>${n==='1 Jahr'?'Noch keine vollständigen 1-Jahres-Daten':'Keine Daten verfügbar'}</small>`}</div>`}).join('')}</div><div class="chart-wrap">${chartSvg(d?.chart)}</div><div class="source">${d?.source||d?.error||'Noch keine Marktdaten'}${d?.latest?`<br>Letzter EOD-Kurs: ${d.latest.date}`:''}${Number.isFinite(manual)?`<br>Aktuelle Bewertung mit Brokerkurs: ${eur(manual,3)}`:''}${Number.isFinite(p.purchasePrice)?`<br>Kaufkurs: ${eur(p.purchasePrice,3)} · Gewinn/Verlust ${pc((price/p.purchasePrice-1)*100)}`:''}</div></div></article>`}).join('')}).join('');$$('.position-summary').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'))}
+function renderPositions(){$('#positionList').innerHTML=['sBroker','Trade Republic'].map(broker=>{const ps=state.positions.filter(p=>p.broker===broker);if(!ps.length)return '';return `<h3 class="broker-title">${broker}</h3>`+ps.map(p=>{const d=state.data[p.id],manual=brokerPrice(p),price=valuationPrice(p),val=positionValue(p),perf=d?.performance||{},status=d?.ok?'ok':Number.isFinite(manual)?'warn':d?'error':'warn',statusText=d?.ok?(Number.isFinite(manual)?'Brokerkurs + EOD-Historie':(d?.sourceMeta?.provider?.startsWith('DB_')?'Börse 15 Min geladen':'Kurs geladen')):Number.isFinite(manual)?'Nur Brokerkurs':d?.error||'Noch nicht geladen';return `<article class="position-card"><div class="position-summary"><div><h3>${p.name}</h3><p>${p.qty.toLocaleString('de-DE')} Stück · ${p.isin}${p.wkn?` · ${p.wkn}`:''}</p><span class="badge ${status}">${statusText}</span></div><div class="price"><strong>${eur(price,price<20?3:2)}</strong><small>${eur(val)}</small></div></div><div class="position-details"><div class="meta-grid"><div class="meta-box"><span>Broker</span><strong>${p.broker}</strong></div><div class="meta-box"><span>Broker-Anzeigequelle</span><strong>${p.brokerDisplaySource||'–'}</strong></div><div class="meta-box"><span>Feste Analysebörse</span><strong>${p.analysisVenue||'–'}</strong></div><div class="meta-box"><span>Alternativen / Datenquelle</span><strong>${(p.fallbackVenues||[]).join(' → ')||'–'}<br>${p.dataSource}${p.marketSymbol?` · ${p.marketSymbol}`:''}</strong></div></div><div class="perf-grid">${[['Tag',perf.day],['Woche',perf.week],['Monat',perf.month],['3 Monate',perf.threeMonths],['1 Jahr',perf.year]].map(([n,x])=>{const available=Number.isFinite(x?.pct)&&Number.isFinite(x?.basePrice)&&x?.baseDate;return `<div class="perf-box${available?'':' unavailable'}"><span>${n}</span>${available?`<strong class="${cls(x.pct)}">${pc(x.pct)}</strong><small>${x.baseDate} · ${eur(x.basePrice,3)}</small>`:`<strong>–</strong><small>${n==='1 Jahr'?'Noch keine vollständigen 1-Jahres-Daten':'Keine Daten verfügbar'}</small>`}</div>`}).join('')}</div><div class="chart-wrap">${chartSvg(d?.chart)}</div><div class="source">${d?.source||d?.error||'Noch keine Marktdaten'}${d?.latest?`<br>Kursstand: ${d.latest.date}`:''}${Number.isFinite(manual)?`<br>Aktuelle Bewertung mit Brokerkurs: ${eur(manual,3)}`:''}${Number.isFinite(p.purchasePrice)?`<br>Kaufkurs: ${eur(p.purchasePrice,3)} · Gewinn/Verlust ${pc((price/p.purchasePrice-1)*100)}`:''}</div></div></article>`}).join('')}).join('');$$('.position-summary').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'))}
 function renderAnalysis(){const rows=state.positions.map(p=>({p,v:marketDayContribution(p)})).filter(x=>Number.isFinite(x.v)).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));$('#contributors').innerHTML=rows.length?rows.map(x=>`<div class="market-row"><div><b>${x.p.name}</b><small class="muted">EOD-Tagesbeitrag · Schlusskurs gegen Vortag</small></div><strong class="${cls(x.v)}">${eur(x.v)}</strong></div>`).join(''):'<p class="muted">Nach der ersten Aktualisierung verfügbar.</p>';$('#diagnostics').innerHTML=state.positions.map(p=>{const d=state.data[p.id],manual=brokerPrice(p),latest=d?.latest?.price,prev=d?.performance?.day?.basePrice,appPrice=valuationPrice(p),delta=Number.isFinite(manual)&&Number.isFinite(latest)?manual-latest:null;let status=d?.ok?'EOD geladen':Number.isFinite(manual)?'Nur Brokerkurs':d?.error||'Noch nicht geladen';let klass=d?.ok?'positive':d?.error?'negative':'warn';return `<div class="diagnostic-card"><div class="diag-title"><div><b>${p.name}</b><small>${p.qty.toLocaleString('de-DE')} Stück · ${p.broker}</small></div><strong class="${klass}">${status}</strong></div><div class="diag-grid"><span>Broker-Anzeigequelle (Info)<b>${p.brokerDisplaySource||'–'}</b></span><span>Feste Analysebörse<b>${p.analysisVenue||'–'}</b></span><span>Tatsächlich verwendete Analysebörse<b>${d?.usedVenue||'–'}</b></span><span>Tatsächliche EODHD-Reihe<b>${d?.symbol||p.marketSymbol||'–'}</b></span><span>Kursdatum<b>${d?.latest?.date||'–'}</b></span><span>EOD-Schlusskurs<b>${eur(latest,3)}</b></span><span>Vortagesschluss<b>${eur(prev,3)}</b></span><span>EOD-Tagesänderung<b class="${cls(d?.performance?.day?.pct)}">${pc(d?.performance?.day?.pct)}</b></span><span>Bewertungskurs der App<b>${eur(appPrice,3)}</b></span><span>Manueller Brokerkurs<b>${eur(manual,3)}</b></span><span>Differenz Broker/EOD<b class="${cls(delta)}">${eur(delta,3)}</b></span><span>Tagesbeitrag EOD<b class="${cls(marketDayContribution(p))}">${eur(marketDayContribution(p))}</b></span></div><p class="diagnostic-note">${d?.venueWarning||'Der Handelsplatz steuert den Abruf automatisch. Unterstützt sind Xetra, Frankfurt, Stuttgart, Euronext Paris/Amsterdam und US. Tradegate, gettex sowie Lang & Schwarz benötigen weiterhin einen manuellen Brokerkurs.'}</p></div>`}).join('')}
 
 
@@ -488,7 +490,7 @@ async function runSystemDiagnosis(){
       `Vercel-Funktion: ${health.response.ok?'erreichbar':'Fehler '+health.response.status}`,
       `Zentral gespeicherte Kursreihen: ${valid}`,
       `Cache-Stand: ${cache.savedAt||'noch leer'}`,
-      'Primärquelle: Deutsche Börse / Xetra Delayed Post-Trade',
+      'Primärquelle: Deutsche Börse Delayed · Xetra Post-Trade; strukturierte Fallback-Engine',
       'Die Diagnose selbst verbraucht keine EODHD-Abfrage.'
     ],health.response.ok?'success':'error');
   }catch(error){showDiagnostic('Systemprüfung abgebrochen',[`App-Version: ${APP_VERSION}`,`Fehler: ${error.message||String(error)}`],'error')}
@@ -509,14 +511,14 @@ async function refresh(){
 
   b.disabled=true;b.textContent='…';
   showDiagnostic('Marktdaten werden aktualisiert',[
-    'Primärquelle: Deutsche Börse/Xetra Delayed.',
-    'Ziel: ein zentraler Kursstand für Mac und iPhone.',
-    'Fallback nur wenn ein Instrument nicht über Xetra auflösbar ist.'
+    'Primärquelle: Deutsche Börse / Xetra Delayed Post-Trade.',
+    'Ziel: ein atomarer 15-Minuten-Snapshot ohne Altwerte.',
+    'Fehlende Instrumente bleiben ausdrücklich als fehlend markiert; alte Kurse werden nicht übernommen.'
   ]);
 
   try{
     const positions=state.positions
-      .filter(p=>p.broker==='sBroker' || p.dataSource==='XETRA_DELAYED' || p.dataSource==='EODHD')
+      .filter(p=>p.dataSource!=='MANUAL')
       .map(p=>({
         id:p.id,name:p.name,isin:p.isin,wkn:p.wkn||'',mnemonic:p.mnemonic||p.analysisSymbol||p.marketSymbol||'',
         venue:p.analysisVenue||p.brokerVenue||'Xetra',currency:p.currency||'EUR'
@@ -530,11 +532,11 @@ async function refresh(){
 
     if(!r.ok||!x.ok)throw new Error(x.error||`Marktdatenabruf fehlgeschlagen (${r.status})`);
 
-    mergeMarketItems(x.results||[],{
+    replaceMarketSnapshot(x.results||[],{
       provider:x.provider||'DB_XETRA_DELAYED',
       delayedMinutes:x.delayedMinutes??15,
       generatedAt:x.generatedAt
-    });
+    },positions.map(p=>p.id));
     render();
     const good=(x.results||[]).filter(v=>v.ok).length;
     const fallback=(x.results||[]).filter(v=>v.sourceMeta?.fallback).length;

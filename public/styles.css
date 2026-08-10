@@ -466,7 +466,7 @@ input,select,textarea{background:#fff!important;border:1px solid #c7d3e0!importa
 /* 5.3.1 */
 [hidden]{display:none!important}
 
-/* VERSION 5.3.2 — IPHONE FIRST / NO HORIZONTAL DESKTOP CANVAS */
+/* VERSION 5.4.0 — IPHONE FIRST / NO HORIZONTAL DESKTOP CANVAS */
 html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important;-webkit-text-size-adjust:100%!important}
 body{min-width:0!important}
 .app-header,main,.page,.panel,.diagnostic-card,.diagnostic-panel,.priority-box,.comparison-summary,.comparison-row{min-width:0!important;max-width:100%!important}
