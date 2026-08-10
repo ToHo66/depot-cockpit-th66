@@ -40,7 +40,7 @@ const DEFAULT_POSITIONS=[
 {id:'datacenter',name:'Global X Data Center REITs & Digital Infrastructure',isin:'IE00BMH5Y327',wkn:'A2QPB0',qty:65,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','gettex','Xetra'],dataSource:'EODHD',analysisSymbol:'V9N.XETRA',currency:'EUR',purchasePrice:24.302},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Nasdaq','NYSE','Manuell'],dataSource:'MANUAL',analysisSymbol:'TMQ.US',currency:'USD',purchasePrice:null}
 ];
-const APP_VERSION='5.3';;;;;;
+const APP_VERSION='5.3.1';;;;;;;
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
 const STORE='th66-professional-master-v3';
 const LEGACY_STORES=['th66-professional-v22-master','th66-professional-master','th66-professional-v3'];
@@ -481,26 +481,18 @@ async function runSystemDiagnosis(){
   if(button){button.disabled=true;button.textContent='Prüfung läuft …'}
   try{
     const health=await fetchJsonWithTimeout('/api/health',{},8000);
-    const h=health.body||{};
-    const guard=readRequestGuard();
-    const current=state.positions.filter(p=>p.dataSource==='EODHD'&&dataIsCurrentToday(p.id)).length;
+    const cache=readCentralMarketCache();
+    const valid=Object.values(cache.items||{}).filter(x=>x?.ok&&Number.isFinite(Number(x?.latest?.price))).length;
     showDiagnostic('Systemprüfung abgeschlossen',[
       `App-Version: ${APP_VERSION}`,
       `Vercel-Funktion: ${health.response.ok?'erreichbar':'Fehler '+health.response.status}`,
-      `EODHD-Schlüssel: ${h.eodhdConfigured?'vorhanden':'FEHLT'}`,
-      `Aktuelle lokale Kursreihen: ${current}/11`,
-      `Heute bereits angefragte Positionen: ${guard.requestedIds.length}`,
-      `EODHD-Limit heute erkannt: ${guard.rateLimited?'Ja':'Nein'}`,
-      'Die Systemprüfung selbst führt keine Markt-Kursabfrage aus.'
-    ],health.response.ok&&h.eodhdConfigured?'success':'error');
-  }catch(error){
-    showDiagnostic('Systemprüfung abgebrochen',[
-      `App-Version: ${APP_VERSION}`,
-      `Fehler: ${error.message||String(error)}`
-    ],'error');
-  }finally{
-    if(button){button.disabled=false;button.textContent='Systemprüfung starten'}
-  }
+      `Zentral gespeicherte Kursreihen: ${valid}`,
+      `Cache-Stand: ${cache.savedAt||'noch leer'}`,
+      'Primärquelle: Deutsche Börse / Xetra Delayed Post-Trade',
+      'Die Diagnose selbst verbraucht keine EODHD-Abfrage.'
+    ],health.response.ok?'success':'error');
+  }catch(error){showDiagnostic('Systemprüfung abgebrochen',[`App-Version: ${APP_VERSION}`,`Fehler: ${error.message||String(error)}`],'error')}
+  finally{if(button){button.disabled=false;button.textContent='Systemprüfung starten'}}
 }
 async function refresh(){
   const b=$('#refreshBtn');
@@ -547,12 +539,12 @@ async function refresh(){
     const good=(x.results||[]).filter(v=>v.ok).length;
     const fallback=(x.results||[]).filter(v=>v.sourceMeta?.fallback).length;
 
-    showDiagnostic('Marktdaten aktualisiert',[
+    showDiagnostic(good?'Marktdaten aktualisiert':'Keine Xetra-Kurse gefunden',[
       `Erfolgreich: ${good}/${positions.length}`,
       `Quelle: ${x.provider||'Deutsche Börse / Xetra Delayed'}`,
       `Verzögerung: ${x.delayedMinutes??15} Minuten`,
       `Fallbacks: ${fallback}`,
-      `Stand: ${x.generatedAt||new Date().toISOString()}`
+      `Stand: ${x.generatedAt||new Date().toISOString()}`,`Quelldatei: ${x.sourceFile||'–'}`
     ],good?'success':'error');
     toast(`${good}/${positions.length} Kurse aktualisiert`);
   }catch(e){

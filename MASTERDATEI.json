@@ -1,5 +1,5 @@
 {
-  "version": "5.3.0",
+  "version": "5.3.1",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -195,7 +195,7 @@
     ]
   },
   "recoveryNote": "Unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand. Keine spätere Cache-, Timeout- oder Startlogik enthalten.",
-  "release": "Xetra Engine + offene Kaufmaske",
+  "release": "Xetra Delayed Live + Transaktionsfix",
   "development_policy": {
     "golden_master": true,
     "one_change_per_release": true,
@@ -237,5 +237,12 @@
     ],
     "freeEntryAlwaysAllowed": true,
     "autoCreateDepotPosition": true
-  }
+  },
+  "fixes": [
+    "echter offizieller MFS GZ/JSON-Abruf",
+    "Kaufmaske nur unter Transaktion",
+    "vollständiger Xetra-Instrument-Master",
+    "15-Minuten-Cache",
+    "keine EODHD-Diagnoseabfrage"
+  ]
 }
