@@ -1,0 +1,3 @@
+import { buildMarketSnapshot } from './_market-core.js';
+function send(res,s,b){res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');return res.status(s).json(b)}
+export default async function handler(req,res){if(req.method!=='POST')return send(res,405,{ok:false,error:'Nur POST erlaubt.'});const positions=Array.isArray(req.body?.positions)?req.body.positions:[];if(!positions.length)return send(res,400,{ok:false,error:'Keine Positionen übergeben.'});try{return send(res,200,await buildMarketSnapshot(positions))}catch(e){return send(res,500,{ok:false,error:e.message||String(e)})}}

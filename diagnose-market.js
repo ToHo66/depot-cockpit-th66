@@ -1,0 +1,2 @@
+import { buildMarketSnapshot } from './_market-core.js';
+export default async function handler(req,res){const positions=Array.isArray(req.body?.positions)?req.body.positions:[];try{const x=positions.length?await buildMarketSnapshot(positions):null;return res.status(200).json({ok:true,version:'5.5.0',architecture:'Instrument-Master -> multi-feed -> atomic snapshot -> IndexedDB -> UI',live:x})}catch(e){return res.status(500).json({ok:false,error:e.message||String(e)})}}
