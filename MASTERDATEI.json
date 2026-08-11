@@ -1,5 +1,5 @@
 {
-  "version": "5.3.4",
+  "version": "5.5.0",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -195,7 +195,7 @@
     ]
   },
   "recoveryNote": "Unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand. Keine spätere Cache-, Timeout- oder Startlogik enthalten.",
-  "release": "Xetra Trading-Session Fix + iPhone Layout Hard Fix",
+  "release": "Market Data Core · fetch/store/display separation",
   "development_policy": {
     "golden_master": true,
     "one_change_per_release": true,
@@ -218,14 +218,29 @@
     "blockDuplicateRequestsSameDay": true
   },
   "marketArchitecture": {
-    "primary": "Deutsche Börse/Xetra Delayed (15 min)",
-    "fallbacks": [
-      "Tradegate Delayed",
-      "Frankfurt Delayed",
-      "EODHD history/special cases"
+    "releaseGate": "11/11 sBroker live market records before total portfolio analytics",
+    "pipeline": [
+      "Instrument Master",
+      "Xetra Pre-Trade",
+      "Xetra Post-Trade",
+      "Tradegate Pre-Trade",
+      "Frankfurt Pre-Trade",
+      "atomic snapshot",
+      "IndexedDB persistence",
+      "read-after-write",
+      "UI"
     ],
-    "centralCacheMinutes": 15,
-    "deviceLocalDailyBlocking": false
+    "snapshotSchemaVersion": 5,
+    "primaryDevice": "iPhone",
+    "persistentStore": "IndexedDB on iPhone",
+    "noStaleMerge": true,
+    "partialValueNeverLabeledTotal": true,
+    "sources": {
+      "xetraPretrade": "DETR-pretrade",
+      "xetraPosttrade": "DETR-posttrade",
+      "tradegatePretrade": "DGAT-pretrade",
+      "frankfurtPretrade": "DFRA-pretrade"
+    }
   },
   "buyArchitecture": {
     "instrumentSearch": true,
