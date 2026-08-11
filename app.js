@@ -40,7 +40,7 @@ const DEFAULT_POSITIONS=[
 {id:'ageing',name:'iShares Ageing Population',isin:'IE00BYZK4669',wkn:'A2ANH1',qty:150,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'AGED',currency:'EUR',purchasePrice:9.52},
 {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Manuell',fallbackVenues:['Manuell'],dataSource:'TRILOGY_YAHOO',analysisSymbol:'TMQ',currency:'EUR',purchasePrice:null}
 ];
-const APP_VERSION='5.6.1';
+const APP_VERSION='5.6.2';
 const APP_BUILD='UI-HARDFIX-20260811';
 const APP_BUILD_DATE='2026-08-11';
 const CANONICAL_HOST='depot-cockpit-th66-vercel-v20.vercel.app';
@@ -85,7 +85,7 @@ async function dbClearSnapshot(){
   localStorage.removeItem(CENTRAL_MARKET_CACHE)
 }
 function marketSourcePreference(){
-  return {primary:'DB_DELAYED',fallbacks:['XETRA_POSTTRADE','MANUAL']} // 5.4.0 fixed policy
+  return {primary:'DB_DELAYED',fallbacks:['XETRA_POSTTRADE','MANUAL']}
 }
 function readCentralMarketCache(){
   const x=readJsonStorage(CENTRAL_MARKET_CACHE,{items:{},savedAt:null});
@@ -214,7 +214,7 @@ function valuationPrice(p){const manual=brokerPrice(p);return Number.isFinite(ma
 function positionValue(p){const price=valuationPrice(p);return Number.isFinite(price)?price*p.qty:null}
 function brokerTotal(name){const values=state.positions.filter(p=>p.broker===name).map(positionValue).filter(Number.isFinite);return values.length?values.reduce((a,b)=>a+b,0):null}
 function saveMarketCache(){try{localStorage.setItem(MARKET_CACHE,JSON.stringify({savedAt:new Date().toISOString(),updatedAt:state.updatedAt,data:state.data}))}catch{}}
-function loadMarketCache(){/* 5.4.0: legacy market caches intentionally ignored */}
+function loadMarketCache(){/* legacy market caches intentionally ignored */}
 function marketDayContribution(p){const d=state.data[p.id];const latest=d?.latest?.price,previous=d?.performance?.day?.basePrice;if(!d?.ok||!Number.isFinite(latest)||!Number.isFinite(previous))return null;return (latest-previous)*p.qty}
 function chartSvg(points){if(!points?.length||points.length<2)return '<div class="chart-empty">Keine zusammenhängende Historie verfügbar</div>';const vals=points.map(x=>x.close),min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,w=600,h=150,pad=10;const coords=points.map((x,i)=>`${pad+(i/(points.length-1))*(w-2*pad)},${h-pad-((x.close-min)/range)*(h-2*pad)}`).join(' ');return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="Kurschart"><polyline points="${coords}" fill="none" stroke="#2d63e2" stroke-width="4" vector-effect="non-scaling-stroke"/><line x1="10" y1="${h-10}" x2="${w-10}" y2="${h-10}" stroke="#dce4ee"/></svg>`}
 function venueOptions(selected){return VENUES.map(v=>`<option ${v===selected?'selected':''}>${v}</option>`).join('')}

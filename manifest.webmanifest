@@ -1,7 +1,7 @@
 {
-  "name": "Depot-Cockpit TH66 Professional 5.6.1",
+  "name": "Depot-Cockpit TH66 Professional 5.6.2",
   "short_name": "Depot 5.6",
-  "start_url": "/?build=5.6.1-ui-reset",
+  "start_url": "/?build=5.6.2-ui-reset",
   "display": "standalone",
   "background_color": "#f1f5fa",
   "theme_color": "#0c1730",
