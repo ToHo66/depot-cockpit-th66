@@ -1,5 +1,5 @@
 {
-  "version": "5.6.0",
+  "version": "5.6.1",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -263,7 +263,7 @@
   "uiArchitecture": {
     "diagnosticsLocation": "Einstellungen > Hilfe & Diagnose only",
     "dynamicPageTitle": true,
-    "buildIdentity": "UI-RESET-20260811",
+    "buildIdentity": "UI-HARDFIX-20260811",
     "brokerTabsVisibleOn": [
       "Übersicht",
       "Positionen"
