@@ -1,0 +1,17 @@
+/* Depot-Cockpit 5.6.5 – Cleanup */
+.metric-card small{
+  line-height:1.35;
+}
+#coverage{
+  white-space:nowrap;
+}
+.risk-note-565{
+  margin-top:12px;
+  padding:11px 12px;
+  border-radius:12px;
+  background:#eef4ff;
+  border:1px solid #cfdcff;
+  color:#294d84;
+  font-size:13px;
+  line-height:1.45;
+}
