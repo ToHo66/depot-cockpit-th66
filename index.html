@@ -7,16 +7,17 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="stylesheet" href="/styles.css?v=5-6-2-single-source-20260811-1436" />
+  <link rel="stylesheet" href="/styles.css?v=5-6-3-base" />
+  <link rel="stylesheet" href="/styles-563.css?v=5-6-3-ui" />
   <title>Depot-Cockpit Professional</title>
 </head>
 <body>
 <header class="app-header">
   <div class="header-row">
     <div>
-      <div id="appVersionLabel" class="eyebrow">DEPOT-COCKPIT · VERSION 5.6.2</div>
+      <div id="appVersionLabel" class="eyebrow">DEPOT-COCKPIT · VERSION 5.6.3</div>
       <h1 id="pageTitle">Übersicht</h1>
-      <div id="buildStamp" class="build-stamp">BUILD SINGLE-SOURCE · 2026-08-11 · 14:36</div>
+      <div id="buildStamp" class="build-stamp">BUILD KONSOLIDIERUNG · 2026-08-11 · 22:30</div>
     </div>
     <button id="refreshBtn" class="icon-button" aria-label="Marktdaten aktualisieren" title="Marktdaten aktualisieren">↻</button>
   </div>
@@ -28,13 +29,11 @@
 </header>
 
 <main>
-  
-
-<div id="setupBanner" class="banner hidden"></div>
+  <div id="setupBanner" class="banner hidden"></div>
 
   <section id="overview" class="page active">
     <article class="hero-card">
-      <div class="hero-topline"><span>Gesamtdepotwert</span><span id="lastUpdate" class="live-label">Noch kein Update</span></div>
+      <div class="hero-topline"><span id="heroScopeLabel">Gesamtdepotwert</span><span id="lastUpdate" class="live-label">Noch kein Update</span></div>
       <div id="totalValue" class="hero-value">–</div>
       <div class="hero-performance"><strong id="dayEuro">–</strong><span id="dayPct">–</span></div>
       <div id="valuationNote" class="hero-note">Noch keine Bewertung</div>
@@ -42,17 +41,22 @@
     </article>
 
     <div class="period-tabs" aria-label="Zeitraum">
-      <button class="active">1T</button><button>1W</button><button>1M</button><button>3M</button><button>1J</button><button>Max</button>
+      <button class="active" data-period="day">1T</button>
+      <button data-period="week">1W</button>
+      <button data-period="month">1M</button>
+      <button data-period="threeMonths">3M</button>
+      <button data-period="year">1J</button>
+      <button data-period="max">Max</button>
     </div>
 
     <div class="metric-grid">
       <article class="metric-card"><span>Gewinn / Verlust</span><strong id="gainLossValue">–</strong><small id="gainLossPct">Gesamtperformance</small></article>
       <article class="metric-card"><span>S Broker</span><strong id="sbrokerValue">–</strong><small id="sbrokerCount">–</small></article>
       <article class="metric-card"><span>Trade Republic</span><strong id="trValue">–</strong><small id="trCount">–</small></article>
-      <article class="metric-card"><span>Datenqualität</span><strong id="coverage">0/0</strong><small>Aktuelle Kursdaten</small></article>
+      <article class="metric-card"><span>Datenqualität</span><strong id="coverage">0/0</strong><small>verwertbare Kursdaten</small></article>
     </div>
-    <article id="reconciliationSummary" class="panel reconciliation-card"></article>
 
+    <article id="reconciliationSummary" class="panel reconciliation-card"></article>
 
     <article class="panel">
       <div class="panel-head"><div><span class="panel-kicker">MARKT</span><h3>Top / Flop heute</h3></div><button class="text-button" data-target-page="analysis">Mehr ›</button></div>
@@ -66,45 +70,39 @@
   </section>
 
   <section id="positions" class="page">
-    <div class="section-title"><div><span class="panel-kicker">BESTÄNDE</span><h2>Positionen</h2><p>Aktive Werte, Stückzahlen und Kursentwicklung.</p></div><button id="expandAll" class="small-button" data-open-all="true">Alle öffnen</button></div>
-    <div class="filter-chips"><button class="active" data-position-filter="alle">Alle</button><button data-position-filter="aktien">Aktien</button><button data-position-filter="etfs">ETFs</button><button data-position-filter="rohstoffe">Rohstoffe</button></div>
+    <div class="section-title"><div><span class="panel-kicker">BESTÄNDE</span><h2>Positionen</h2><p>Aktive Werte, Stückzahlen und Kursqualität.</p></div><button id="expandAll" class="small-button" data-open-all="true">Alle öffnen</button></div>
+    <div class="filter-chips">
+      <button class="active" data-position-filter="alle">Alle</button>
+      <button data-position-filter="aktien">Aktien</button>
+      <button data-position-filter="etfs">ETFs</button>
+      <button data-position-filter="rohstoffe">Rohstoffe</button>
+    </div>
     <div id="positionList"></div>
   </section>
 
-  <section id="transaction" class="page"><section class="open-buy-card" id="openBuyCard">
-  <div class="open-buy-head">
-    <div>
-      <span class="eyebrow">KAUF · OFFENE INSTRUMENTSUCHE</span>
-      <h2>Neues Wertpapier kaufen</h2>
-      <p>Name, ISIN, WKN oder Kürzel suchen. Falls das Papier nicht im Deutsche-Börse-Instrument-Master liegt, ist eine vollständig freie Eingabe möglich.</p>
-    </div>
-  </div>
+  <section id="transaction" class="page">
+    <section class="open-buy-card" id="openBuyCard">
+      <div class="open-buy-head"><div><span class="eyebrow">KAUF · OFFENE INSTRUMENTSUCHE</span><h2>Neues Wertpapier kaufen</h2><p>Name, ISIN, WKN oder Kürzel suchen. Falls das Papier nicht im Instrument-Master liegt, ist eine freie Eingabe möglich.</p></div></div>
+      <div class="buy-search-row"><input id="buyInstrumentQuery" placeholder="z. B. IE00BK5BQT80, VWCE, SAP oder ETF-Name"><button id="buyInstrumentSearchBtn" type="button" class="primary">Suchen</button></div>
+      <div id="buyInstrumentResults" class="instrument-results"></div>
+      <div id="buyInstrumentSelected" class="instrument-selected-wrap"><span class="muted">Noch kein Instrument gewählt. Freie Eingabe ist jederzeit möglich.</span></div>
+      <div class="buy-grid">
+        <label>Name<input id="buyName" placeholder="frei eingebbar"></label>
+        <label>ISIN<input id="buyIsin" placeholder="optional"></label>
+        <label>WKN<input id="buyWkn" placeholder="optional"></label>
+        <label>Kürzel<input id="buyMnemonic" placeholder="optional"></label>
+        <label>Typ<input id="buyType" placeholder="ETF, Aktie, ETC …"></label>
+        <label>Währung<input id="buyCurrency" value="EUR"></label>
+        <label>Handelsplatz<input id="buyVenue" value="Xetra"></label>
+        <label>Stückzahl<input id="buyQty" inputmode="decimal"></label>
+        <label>Kaufkurs<input id="buyPrice" inputmode="decimal"></label>
+        <label>Gebühren<input id="buyFees" inputmode="decimal" value="0"></label>
+        <label>Broker<select id="buyBroker"><option>sBroker</option><option>Trade Republic</option><option>Sonstiger</option></select></label>
+        <label>Kaufdatum<input id="buyDate" type="date"></label>
+      </div>
+      <button id="buyOpenInstrumentBtn" type="button" class="primary-action wide">Kauf speichern</button>
+    </section>
 
-  <div class="buy-search-row">
-    <input id="buyInstrumentQuery" placeholder="z. B. IE00BK5BQT80, VWCE, SAP oder ETF-Name">
-    <button id="buyInstrumentSearchBtn" type="button" class="primary">Suchen</button>
-  </div>
-  <div id="buyInstrumentResults" class="instrument-results"></div>
-  <div id="buyInstrumentSelected" class="instrument-selected-wrap">
-    <span class="muted">Noch kein Instrument gewählt. Freie Eingabe ist jederzeit möglich.</span>
-  </div>
-
-  <div class="buy-grid">
-    <label>Name<input id="buyName" placeholder="frei eingebbar"></label>
-    <label>ISIN<input id="buyIsin" placeholder="optional"></label>
-    <label>WKN<input id="buyWkn" placeholder="optional"></label>
-    <label>Kürzel<input id="buyMnemonic" placeholder="optional"></label>
-    <label>Typ<input id="buyType" placeholder="ETF, Aktie, ETC …"></label>
-    <label>Währung<input id="buyCurrency" value="EUR"></label>
-    <label>Handelsplatz<input id="buyVenue" value="Xetra"></label>
-    <label>Stückzahl<input id="buyQty" inputmode="decimal"></label>
-    <label>Kaufkurs<input id="buyPrice" inputmode="decimal"></label>
-    <label>Gebühren<input id="buyFees" inputmode="decimal" value="0"></label>
-    <label>Broker<select id="buyBroker"><option>sBroker</option><option>Trade Republic</option><option>Sonstiger</option></select></label>
-    <label>Kaufdatum<input id="buyDate" type="date"></label>
-  </div>
-  <button id="buyOpenInstrumentBtn" type="button" class="primary full-width">Kauf speichern</button>
-</section>
     <div class="section-title"><div><span class="panel-kicker">BUCHUNG</span><h2>Neue Transaktion</h2><p>Kauf, Nachkauf, Teilverkauf oder vollständiger Verkauf.</p></div></div>
     <article class="panel form-card transaction-card">
       <div class="transaction-type"><button class="active" data-tx="BUY">Kauf</button><button data-tx="SELL">Verkauf</button></div>
@@ -123,66 +121,94 @@
   </section>
 
   <section id="analysis" class="page">
-    <div class="section-title"><div><span class="panel-kicker">AUSWERTUNG</span><h2>Analyse</h2><p>Performance, Beiträge und Datenqualität.</p></div></div>
-    <div class="analysis-tabs"><button class="active" data-analysis-tab="performance">Performance</button><button data-analysis-tab="allokation">Allokation</button><button data-analysis-tab="risiko">Risiko</button></div>
-    <article class="panel"><div class="panel-head"><h3>Depotbeiträge heute</h3></div><div id="contributors"></div></article>
-    <article class="panel"><div class="panel-head"><div><h3>Depot-Differenzprüfer</h3><p class="muted">Priorisiert automatisch die wahrscheinlichsten Verursacher der Gesamtabweichung.</p></div></div><div id="brokerComparison"></div></article>
-    <article class="panel chart-panel"><div class="panel-head"><h3>Performance</h3><strong id="chartHeadline">–</strong></div><div class="large-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
-    <article class="panel"><div class="panel-head"><div><h3>Kursdiagnose</h3><p class="muted">Bewertungskurs, EOD-Reihe, Vortag und Handelsplatz transparent je Position.</p></div></div><div class="info-banner"><b>Architekturhinweis:</b> Broker-Handelsplatz und EODHD-Symbol sind getrennte Angaben. Tageswerte sind derzeit EOD-Schlusskurswerte, keine Intraday-Livewerte.</div><div id="diagnostics"></div></article>
+    <div class="section-title"><div><span class="panel-kicker">AUSWERTUNG</span><h2>Analyse</h2><p>Nur Informationen, die eine konkrete Aussage liefern.</p></div></div>
+    <div class="analysis-tabs">
+      <button class="active" data-analysis-tab="performance">Performance</button>
+      <button data-analysis-tab="allokation">Allokation</button>
+      <button data-analysis-tab="risiko">Risiko</button>
+    </div>
+
+    <div id="analysisPerformance" class="analysis-view">
+      <article class="panel">
+        <div class="panel-head"><div><span class="panel-kicker">PERFORMANCE</span><h3>Depotbeiträge heute</h3></div></div>
+        <div id="analysisPerformanceSummary" class="analysis-summary"></div>
+        <div id="contributors"></div>
+      </article>
+    </div>
+
+    <div id="analysisAllocation" class="analysis-view" hidden>
+      <article class="panel"><div class="panel-head"><div><span class="panel-kicker">ALLOKATION</span><h3>Depotgewichtung</h3></div></div><div id="allocationContent"></div></article>
+    </div>
+
+    <div id="analysisRisk" class="analysis-view" hidden>
+      <article class="panel"><div class="panel-head"><div><span class="panel-kicker">RISIKO</span><h3>Konzentration & Datenqualität</h3></div></div><div id="riskContent"></div></article>
+    </div>
+
+    <article class="panel legacy-comparison-panel"><div id="brokerComparison"></div></article>
+    <article class="panel chart-panel legacy-chart-panel"><div class="panel-head"><h3>Performance</h3><strong id="chartHeadline">–</strong></div><div class="large-chart"></div></article>
+    <article class="panel legacy-diagnostics-panel"><div id="diagnostics"></div></article>
   </section>
 
   <section id="manage" class="page">
-    <div class="section-title"><div><span class="panel-kicker">VERWALTUNG</span><h2>Einstellungen</h2><p>Depots, Wertpapiere, Handelsplätze und Sicherungen.</p></div></div>
+    <div class="section-title"><div><span class="panel-kicker">VERWALTUNG</span><h2>Einstellungen</h2><p>Alltag einfach, technische Details nur bei Bedarf.</p></div></div>
 
-
-    <details id="courseManagerBlock" class="settings-group course-manager-group" open><summary>Kurslogik</summary><div class="settings-content">
-      <p class="muted">Broker-Anzeigequelle und feste Analysebörse sind strikt getrennt. Wechselnde Brokeranzeigen wie Quotrix, Lang & Schwarz oder Société Générale verändern die historische Analysezeitreihe nicht.</p>
-      <div id="courseManagerSummary" class="course-summary"></div>
-      <div id="courseManager"></div>
-      <div class="button-row"><button id="saveCourseManager" class="primary-action">Zuordnungen speichern</button><button id="testCourseManager" class="secondary-action">Speichern & Kurse prüfen</button></div>
-    </div></details>
-
-    <details class="settings-group" open><summary>Depots verwalten</summary><div class="settings-content">
-      <label>S Broker Referenzwert – manuell (€)<input id="sbrokerReference" inputmode="decimal"></label>
-      <label>Trade Republic Referenzwert – manuell (€)<input id="trReference" inputmode="decimal"></label>
-      <button id="saveReferences" class="primary-action wide">Speichern</button>
-    </div></details>
-
-    <details class="settings-group"><summary>Wertpapier hinzufügen</summary><div class="settings-content">
-      <div class="form-grid">
-        <label class="full">Name<input id="newName"></label>
-        <label>ISIN<input id="newIsin" autocapitalize="characters"></label><label>WKN<input id="newWkn" autocapitalize="characters"></label>
-        <label>Stückzahl<input id="newQty" inputmode="decimal"></label><label>Kaufkurs (€)<input id="newPurchasePrice" inputmode="decimal"></label>
-        <label>Broker<select id="newBroker"><option>sBroker</option><option>Trade Republic</option></select></label>
-        <label>Handelsplatz<select id="newVenue"></select></label>
-        <label class="full">Vergleichsplätze<input id="newFallbackVenues" placeholder="Tradegate, Xetra, Stuttgart"></label>
-        <label>Datenquelle<select id="newSource"><option value="EODHD">EODHD</option><option value="MANUAL">Nur Brokerkurs</option></select></label>
-        <label>EODHD-Symbol<input id="newSymbol" placeholder="z. B. SAP.XETRA"></label>
+    <details class="settings-group" id="optionalDepotCompare">
+      <summary>Optionaler Depot-Abgleich</summary>
+      <div class="settings-content">
+        <p class="muted">Nur verwenden, wenn du einen aktuellen Broker-Gesamtwert bewusst mit der App vergleichen möchtest. Im normalen Betrieb ist keine Eingabe nötig.</p>
+        <label>S Broker Referenzwert – manuell (€)<input id="sbrokerReference" inputmode="decimal"></label>
+        <label>Trade Republic Referenzwert – manuell (€)<input id="trReference" inputmode="decimal"></label>
+        <button id="saveReferences" class="primary-action wide">Vergleichswert speichern</button>
+        <details class="subdetails"><summary>Positionsweiser Abgleich</summary><div id="brokerPositionValueInputs"></div><button id="saveBrokerPositionValues" class="primary-action wide">Positionswerte speichern</button></details>
+        <div id="brokerComparisonHome"></div>
       </div>
-      <button id="addPosition" class="primary-action wide">Position hinzufügen</button>
-    </div></details>
+    </details>
+
+    <details class="settings-group" id="courseManagerBlock">
+      <summary>Erweiterte Kursdiagnose</summary>
+      <div class="settings-content">
+        <p class="muted">Technische Kursquellen und Symbole. Nur bei einer konkreten Fehlersuche öffnen.</p>
+        <div id="courseManagerSummary" class="course-summary"></div>
+        <div id="courseManager"></div>
+        <div class="button-row"><button id="saveCourseManager" class="primary-action">Zuordnungen speichern</button><button id="testCourseManager" class="secondary-action">Speichern & Kurse prüfen</button></div>
+        <details class="subdetails"><summary>Manuelle Brokerkurse</summary><div id="brokerPriceInputs"></div><button id="saveBrokerPrices" class="primary-action wide">Brokerkurse speichern</button></details>
+        <div id="diagnosticsHome"></div>
+      </div>
+    </details>
+
+    <details class="settings-group">
+      <summary>Wertpapier hinzufügen</summary>
+      <div class="settings-content">
+        <div class="form-grid">
+          <label class="full">Name<input id="newName"></label>
+          <label>ISIN<input id="newIsin" autocapitalize="characters"></label><label>WKN<input id="newWkn" autocapitalize="characters"></label>
+          <label>Stückzahl<input id="newQty" inputmode="decimal"></label><label>Kaufkurs (€)<input id="newPurchasePrice" inputmode="decimal"></label>
+          <label>Broker<select id="newBroker"><option>sBroker</option><option>Trade Republic</option></select></label>
+          <label>Handelsplatz<select id="newVenue"></select></label>
+          <label class="full">Vergleichsplätze<input id="newFallbackVenues" placeholder="Tradegate, Xetra, Stuttgart"></label>
+          <label>Datenquelle<select id="newSource"><option value="EODHD">Automatisch</option><option value="MANUAL">Nur manuell</option></select></label>
+          <label>Analyse-Symbol<input id="newSymbol" placeholder="optional"></label>
+        </div>
+        <button id="addPosition" class="primary-action wide">Position hinzufügen</button>
+      </div>
+    </details>
 
     <details class="settings-group"><summary>Wertpapiere bearbeiten</summary><div class="settings-content"><div id="positionEditors"></div><button id="savePositionSettings" class="primary-action wide">Stammdaten speichern</button></div></details>
-    <details class="settings-group" open><summary>Broker-Abgleich je Position</summary><div class="settings-content"><p class="muted">Für die einmalige Kalibrierung zeitgleich sichtbare Positionswerte eintragen. Danach zeigt der Differenzprüfer sofort, welche Position die Gesamtabweichung verursacht.</p><div id="brokerPositionValueInputs"></div><button id="saveBrokerPositionValues" class="primary-action wide">Positionswerte speichern</button></div></details>
-    <details class="settings-group"><summary>Brokerkurse</summary><div class="settings-content"><p class="muted">Brokerkurse dienen nur der aktuellen Bewertung. Historische Performance bleibt getrennt.</p><div id="brokerPriceInputs"></div><button id="saveBrokerPrices" class="primary-action wide">Brokerkurse speichern</button></div></details>
     <details class="settings-group"><summary>Archiv</summary><div class="settings-content"><div id="archiveList"></div></div></details>
-    <details class="settings-group" id="helpDiagnostics">
-  <summary>Hilfe & Diagnose</summary>
-  <div class="settings-content">
-    <div class="settings-diagnostic-head">
-      <div>
-        <span class="eyebrow">SYSTEMDIAGNOSE · VERSION 5.6.2</span>
-        <h3>Kursengine prüfen</h3>
-        <p class="muted">Prüft App, Snapshot-Speicher und Kursengine. Die Diagnose verbraucht kein EODHD-Kontingent.</p>
-      </div>
-      <button id="diagnoseBtn" class="primary diagnostic-button">Systemprüfung starten</button>
-    </div>
-    <div id="diagnosticPanel" class="diagnostic-panel info" hidden></div>
-    <div id="diagnosticsContent"></div>
-  </div>
-</details>
 
-<details class="settings-group"><summary>Daten & Backup</summary><div class="settings-content"><div class="button-row"><button id="exportBtn" class="secondary-action">JSON exportieren</button><label class="secondary-action file-label">JSON importieren<input id="importInput" type="file" accept="application/json"></label></div><button id="resetBtn" class="danger-action wide">Lokale Eingaben zurücksetzen</button></div></details>
+    <details class="settings-group" id="helpDiagnostics">
+      <summary>Hilfe & Systemdiagnose</summary>
+      <div class="settings-content">
+        <div class="settings-diagnostic-head">
+          <div><span class="eyebrow">SYSTEMDIAGNOSE · VERSION 5.6.3</span><h3>Kursengine prüfen</h3><p class="muted">Technische Prüfung ohne zusätzlichen Börsenabruf.</p></div>
+          <button id="diagnoseBtn" class="primary-action diagnostic-button">Systemprüfung starten</button>
+        </div>
+        <div id="diagnosticPanel" class="diagnostic-panel info" hidden></div>
+        <div id="diagnosticsContent"></div>
+      </div>
+    </details>
+
+    <details class="settings-group"><summary>Daten & Backup</summary><div class="settings-content"><div class="button-row"><button id="exportBtn" class="secondary-action">JSON exportieren</button><label class="secondary-action file-label">JSON importieren<input id="importInput" type="file" accept="application/json"></label></div><button id="resetBtn" class="danger-action wide">Lokale Eingaben zurücksetzen</button></div></details>
   </section>
 </main>
 
@@ -194,6 +220,8 @@
   <button data-page="manage"><b>⚙</b><span>Einstellungen</span></button>
 </nav>
 <div id="toast" class="toast"></div>
-<script src="/app.js?v=5-6-2-single-source-20260811-1436" defer></script>
+
+<script src="/app.js?v=5-6-2-core" defer></script>
+<script src="/app-563.js?v=5-6-3-konsolidierung" defer></script>
 </body>
 </html>
