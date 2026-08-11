@@ -1,5 +1,5 @@
 {
-  "version": "5.5.2",
+  "version": "5.6.0",
   "referenceDate": "2026-07-14",
   "rules": {
     "primaryDevice": "iPhone",
@@ -195,7 +195,7 @@
     ]
   },
   "recoveryNote": "Unveränderte Rückkehr auf den letzten funktionierenden Release-4.0-Stand. Keine spätere Cache-, Timeout- oder Startlogik enthalten.",
-  "release": "Trade Republic Trilogy + UI isolation",
+  "release": "UI Structural Reset",
   "development_policy": {
     "golden_master": true,
     "one_change_per_release": true,
@@ -259,5 +259,15 @@
     "Wochenende/vor Handelsbeginn: letzter Werktag wird als Suchfenster verwendet.",
     "iPhone-Grafikfehler behoben: globale CSS-Regel [class*=priority] entfernte versehentlich das Layout von priority-box und priority-row; Selektoren auf echte Status-Badges begrenzt.",
     "Schnellprüfung auf iPhone als vertikale Liste hart zurückgesetzt."
-  ]
+  ],
+  "uiArchitecture": {
+    "diagnosticsLocation": "Einstellungen > Hilfe & Diagnose only",
+    "dynamicPageTitle": true,
+    "buildIdentity": "UI-RESET-20260811",
+    "brokerTabsVisibleOn": [
+      "Übersicht",
+      "Positionen"
+    ],
+    "marketEngineChanged": false
+  }
 }
