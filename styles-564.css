@@ -1,0 +1,36 @@
+/* Depot-Cockpit 5.6.4 – technical polish */
+.sparkline{
+  display:none !important;
+}
+.hero-card{
+  min-height:auto !important;
+}
+.hero-coverage-564{
+  margin-top:8px;
+  margin-bottom:8px;
+  padding:8px 10px;
+  border-radius:10px;
+  font-size:13px;
+  line-height:1.35;
+}
+.hero-coverage-564.complete{
+  background:#eaf7ef;
+  border:1px solid #cbe8d5;
+  color:#17663e;
+}
+.hero-coverage-564.partial{
+  background:#fff4df;
+  border:1px solid #efd39d;
+  color:#795000;
+}
+.hero-coverage-564 strong{
+  color:inherit;
+}
+#totalValue.partial-total-564{
+  margin-bottom:0 !important;
+}
+@media(max-width:600px){
+  .hero-coverage-564{
+    font-size:12px;
+  }
+}
