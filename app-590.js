@@ -1,4 +1,4 @@
-/* Depot-Cockpit Professional 5.9.0
+/* Depot-Cockpit Professional 5.9.1
    CONSOLIDATED-STABLE
    - ersetzt app-563/app-564/app-565/app-570 als aktive UI-Schicht
    - genau ein Render-Hook
@@ -9,8 +9,8 @@
   'use strict';
 
   const UI = { broker: 'all', asset: 'alle', period: 'day', analysis: 'performance' };
-  const BUILD_VERSION = '5.9.0';
-  const BUILD_STAMP = 'BUILD DATA-CORE-V3 · 2026-08-12 · 09:25';
+  const BUILD_VERSION = '5.9.1';
+  const BUILD_STAMP = 'BUILD TRANSACTION-CORRECTION · 2026-08-12 · 23:15';
 
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -480,7 +480,7 @@
 
 
 
-/* Depot-Cockpit 5.9.0 – DATA CORE V3
+/* Depot-Cockpit 5.9.1 – DATA CORE V3
    Ein einziger Kurs-Endpunkt:
    Deutsche Börse Xetra Post-Trade -> Xetra Pre-Trade -> EODHD nur für Rest -> Trilogy TMQ.
    Keine separaten market-fallback/trilogy Endpunkte mehr.
@@ -488,7 +488,7 @@
 (() => {
   'use strict';
 
-  const CORE_VERSION = '5.9.0';
+  const CORE_VERSION = '5.9.1';
 
   function correctInstrumentMaster590() {
     const fixes = {
@@ -521,9 +521,16 @@
       dataSource:p.dataSource || 'DB_DELAYED',
       broker:p.broker || '',
       venue:p.analysisVenue || '',
+      exchangeCode:p.analysisExchangeCode || p.exchangeCode || '',
       candidates:(() => {
         const base = String(p.analysisSymbol || p.marketSymbol || '').trim().split('.')[0];
         if (!base || p.id === 'trilogy') return [];
+        const exchange = String(p.analysisExchangeCode || p.exchangeCode || '').toUpperCase();
+        if (exchange === 'US' || ['NYSE','NASDAQ','NYSE MKT','AMEX'].includes(exchange)) {
+          return [{venue:'US',symbol:`${base}.US`}];
+        }
+        if (exchange === 'PA') return [{venue:'Euronext Paris',symbol:`${base}.PA`}];
+        if (exchange === 'AS') return [{venue:'Euronext Amsterdam',symbol:`${base}.AS`}];
         return [
           {venue:'Xetra',symbol:`${base}.XETRA`},
           {venue:'Frankfurt',symbol:`${base}.F`},
@@ -548,7 +555,7 @@
     const b = document.getElementById('refreshBtn');
     if (b) { b.disabled = true; b.textContent = '…'; }
 
-    showDiagnostic('Datenkern 5.9.0 prüft alle Depotpositionen', [
+    showDiagnostic('Datenkern 5.9.1 prüft alle Depotpositionen', [
       '1. Xetra Post-Trade: echter letzter Handel.',
       '2. Falls dort kein Trade gefunden wird: Xetra Pre-Trade mit Bid/Ask-Mittelwert.',
       '3. Nur verbleibende Fehlstellen: EODHD-Fallback.',
@@ -593,13 +600,13 @@
       ];
 
       showDiagnostic(
-        body.complete ? 'Datenkern 5.9.0: vollständige Versorgung' : 'Datenkern 5.9.0: Prüfung abgeschlossen',
+        body.complete ? 'Datenkern 5.9.1: vollständige Versorgung' : 'Datenkern 5.9.1: Prüfung abgeschlossen',
         lines,
         body.complete ? 'success' : 'info'
       );
       toast(`${Object.keys(stored.items || {}).length}/${state.positions.length} Positionen verwertbar`);
     } catch (error) {
-      showDiagnostic('Datenkern 5.9.0 fehlgeschlagen', [
+      showDiagnostic('Datenkern 5.9.1 fehlgeschlagen', [
         error?.message || String(error),
         'Bereits gespeicherte gültige Kurse bleiben unverändert erhalten.'
       ], 'error');
