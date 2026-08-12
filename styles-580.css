@@ -1,0 +1,102 @@
+/* Depot-Cockpit 5.6.3 – Lesbarkeit & Funktionszustände */
+:root{
+  --muted-563:#36465a;
+  --text-563:#0a1424;
+  --line-563:#c8d2df;
+}
+body{color:var(--text-563)!important}
+.muted,.section-title p,.metric-card span,.metric-card small,.hero-note,
+.position-summary p,.position-summary .price small,.compact-position small,
+label,.source,.diagnostic-note,.course-foot small,.course-foot span{
+  color:var(--muted-563)!important;
+}
+.broker-tab,.filter-chips button,.analysis-tabs button,.period-tabs button{
+  color:#243449!important;font-weight:800!important;
+}
+.broker-tab.active,.filter-chips button.active,.analysis-tabs button.active{
+  background:#fff!important;color:#0a1424!important;border-color:#b7c4d4!important;
+}
+.period-tabs button{background:#fff!important;border:1px solid #c7d0dc!important}
+.period-tabs button.active{background:#111b2b!important;color:#fff!important;border-color:#111b2b!important}
+.status-current{background:#e7f7ee!important;color:#087a4d!important}
+.status-stored{background:#fff1d6!important;color:#8a5900!important}
+.status-missing{background:#ffe8ec!important;color:#b42336!important}
+.status-manual{background:#edf2ff!important;color:#2859a6!important}
+.stale-warning{display:inline-block;color:#8a5900!important;background:#fff6e5;border:1px solid #f1d69a;border-radius:8px;padding:7px 9px;margin-bottom:5px}
+.hidden563{display:none!important}
+.reconciliation-card{display:flex!important;align-items:center;justify-content:space-between;gap:12px}
+.reconciliation-card h3{margin:4px 0 5px}.reconciliation-card p{margin:0;color:var(--muted-563)!important;line-height:1.4}
+.analysis-kpis,.comparison-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.analysis-kpis span{background:#f3f6f9;border:1px solid #d6dee8;border-radius:12px;padding:10px;color:#405066}
+.analysis-kpis b{display:block;color:#0a1424;margin-top:4px}
+.info-strip{padding:12px 14px;border-radius:12px;background:#eef4ff;border:1px solid #ceddff;color:#294d84;line-height:1.45}
+.allocation-row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:12px 0;border-bottom:1px solid #dbe2ea}
+.allocation-row small{display:block;color:var(--muted-563);margin-top:3px}.allocation-value{text-align:right}.weight-bar{grid-column:1/-1;height:7px;border-radius:999px;background:#e8edf3;overflow:hidden}.weight-bar i{display:block;height:100%;background:#2468d8;border-radius:inherit}
+.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.risk-grid article{background:#f4f7fa;border:1px solid #d2dbe6;border-radius:14px;padding:12px}.risk-grid span,.risk-grid small{display:block;color:#405066}.risk-grid b{display:block;margin:6px 0;color:#0a1424}.risk-grid strong{font-size:18px}
+.subdetails{border:1px solid #d0d9e4;border-radius:12px;background:#fff;padding:0 12px}.subdetails summary{padding:12px 0;font-weight:800;color:#172438}
+#brokerComparisonHome,#diagnosticsHome{margin-top:12px}
+#optionalDepotCompare>.settings-content,#courseManagerBlock>.settings-content{background:#f7f9fc!important}
+.course-grid label:nth-child(n+2){opacity:.9}
+.course-status,.summary-pill{font-size:11px!important}
+@media(max-width:600px){
+  .reconciliation-card{align-items:flex-start;flex-direction:column}
+  .reconciliation-card .secondary-action{width:100%}
+  .analysis-kpis,.risk-grid{grid-template-columns:1fr 1fr}
+  .period-tabs{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:5px!important;overflow:visible!important}
+  .period-tabs button{min-width:0!important;padding:9px 2px!important;font-size:12px!important}
+}
+
+
+/* Depot-Cockpit 5.6.4 – technical polish */
+.sparkline{
+  display:none !important;
+}
+.hero-card{
+  min-height:auto !important;
+}
+.hero-coverage-564{
+  margin-top:8px;
+  margin-bottom:8px;
+  padding:8px 10px;
+  border-radius:10px;
+  font-size:13px;
+  line-height:1.35;
+}
+.hero-coverage-564.complete{
+  background:#eaf7ef;
+  border:1px solid #cbe8d5;
+  color:#17663e;
+}
+.hero-coverage-564.partial{
+  background:#fff4df;
+  border:1px solid #efd39d;
+  color:#795000;
+}
+.hero-coverage-564 strong{
+  color:inherit;
+}
+#totalValue.partial-total-564{
+  margin-bottom:0 !important;
+}
+@media(max-width:600px){
+  .hero-coverage-564{
+    font-size:12px;
+  }
+}
+
+
+/* 5.8.0 consolidated additions */
+.sparkline{display:none!important}
+.hidden580{display:none!important}
+.hero-coverage-580{
+  display:inline-block;margin:8px 0 5px;padding:7px 10px;border-radius:10px;
+  font-size:12px;line-height:1.35;font-weight:600
+}
+.hero-coverage-580.complete{background:#eaf7ef;border:1px solid #cbe8d5;color:#17663e}
+.hero-coverage-580.partial{background:#fff4df;border:1px solid #efd39d;color:#795000}
+.integrity-note-580{
+  margin:0 0 12px;padding:11px 12px;border-radius:12px;line-height:1.45;font-size:13px
+}
+.integrity-note-580.good{background:#eaf7ef;border:1px solid #cbe8d5;color:#17663e}
+.integrity-note-580.warn{background:#fff4df;border:1px solid #efd39d;color:#795000}
+.integrity-note-580.danger{background:#ffe9ed;border:1px solid #efbdc6;color:#992437}

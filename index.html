@@ -8,29 +8,16 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="stylesheet" href="/styles.css?v=5-6-3-base" />
-  <link rel="stylesheet" href="/styles-563.css?v=5-6-3-ui" />
-  <link rel="stylesheet" href="/styles-564.css?v=5-6-4-tech" />
-  <link rel="stylesheet" href="/styles-570.css?v=5-7-0-stable" />
-  <script>
-  (() => {
-    const CANONICAL = 'depot-cockpit-th66-vercel-v20.vercel.app';
-    const host = location.hostname;
-    const isVercel = /\.vercel\.app$/i.test(host);
-    if (isVercel && host !== CANONICAL) {
-      const target = 'https://' + CANONICAL + location.pathname + location.search + location.hash;
-      location.replace(target);
-    }
-  })();
-  </script>
+  <link rel="stylesheet" href="/styles-580.css?v=5-8-0-consolidated" />
   <title>Depot-Cockpit Professional</title>
 </head>
 <body>
 <header class="app-header">
   <div class="header-row">
     <div>
-      <div id="appVersionLabel" class="eyebrow">DEPOT-COCKPIT · VERSION 5.7.0</div>
+      <div id="appVersionLabel" class="eyebrow">DEPOT-COCKPIT · VERSION 5.8.0</div>
       <h1 id="pageTitle">Übersicht</h1>
-      <div id="buildStamp" class="build-stamp">BUILD STABLE-PRODUCTION · 2026-08-11 · 23:46</div>
+      <div id="buildStamp" class="build-stamp">BUILD CONSOLIDATED-STABLE · 2026-08-12 · 07:50</div>
     </div>
     <button id="refreshBtn" class="icon-button" aria-label="Marktdaten aktualisieren" title="Marktdaten aktualisieren">↻</button>
   </div>
@@ -213,7 +200,7 @@
       <summary>Hilfe & Systemdiagnose</summary>
       <div class="settings-content">
         <div class="settings-diagnostic-head">
-          <div><span class="eyebrow">SYSTEMDIAGNOSE · VERSION 5.7.0</span><h3>Kursengine prüfen</h3><p class="muted">Technische Prüfung ohne zusätzlichen Börsenabruf.</p></div>
+          <div><span class="eyebrow">SYSTEMDIAGNOSE · VERSION 5.8.0</span><h3>Kursengine prüfen</h3><p class="muted">Technische Prüfung ohne zusätzlichen Börsenabruf.</p></div>
           <button id="diagnoseBtn" class="primary-action diagnostic-button">Systemprüfung starten</button>
         </div>
         <div id="diagnosticPanel" class="diagnostic-panel info" hidden></div>
@@ -235,8 +222,6 @@
 <div id="toast" class="toast"></div>
 
 <script src="/app.js?v=5-6-2-core" defer></script>
-<script src="/app-563.js?v=5-6-3-konsolidierung" defer></script>
-<script src="/app-564.js?v=5-6-4-tech" defer></script>
-<script src="/app-570.js?v=5-7-0-stable" defer></script>
+<script src="/app-580.js?v=5-8-0-consolidated" defer></script>
 </body>
 </html>
