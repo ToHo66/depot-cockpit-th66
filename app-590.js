@@ -578,23 +578,6 @@
         throw new Error(body?.error || `Market Data V3 HTTP ${response.status}`);
       }
 
-      // 5.9.4: Trilogy-only fallback runs AFTER the stable core has finished.
-      // It is isolated in its own endpoint and cannot affect any other quote path.
-      if (!(body.results || []).some(x => x?.id === 'trilogy' && x?.ok)) {
-        try {
-          const tq = await fetchJsonWithTimeout('/api/trilogy-quote', {}, 12000);
-          if (tq.response.ok && tq.body?.ok && tq.body?.result?.ok) {
-            body.results = [...(body.results || []), tq.body.result];
-            body.positionDiagnostics = (body.positionDiagnostics || []).map(d =>
-              d?.id === 'trilogy'
-                ? {...d,status:'FOUND',statusLabel:'Isolierter Trilogy-Fallback',source:tq.body.result.source}
-                : d
-            );
-            body.complete = state.positions.every(p => (body.results || []).some(x => x?.id === p.id && x?.ok));
-          }
-        } catch {}
-      }
-
       const snapshot = {
         ok:true,
         provider:'Depot-Cockpit Market Data V3',

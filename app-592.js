@@ -1,5 +1,5 @@
 
-/* Depot-Cockpit Professional 5.9.4
+/* Depot-Cockpit Professional 5.9.2
    TRANSACTION-CORRECTION
    - externe Live-Instrumentsuche (EODHD Search API via Server)
    - neue Instrumente erhalten eine Kursquelle statt automatisch MANUAL
@@ -12,7 +12,7 @@
 (() => {
   'use strict';
 
-  const BUILD = '5.9.4';
+  const BUILD = '5.9.2';
 
   const txEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
