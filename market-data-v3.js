@@ -304,103 +304,6 @@ async function yahooChart(symbol){
   }
   throw new Error('Yahoo no price');
 }
-async function cryptoResult(p){
-  const symbol=String(p.analysisSymbol||p.marketSymbol||'ETH-EUR').trim()||'ETH-EUR';
-
-  // 5.10.4: Kraken is the primary ETH/EUR source. The public ticker endpoint
-  // needs no API key and returns the last traded price in EUR directly.
-  try{
-    const pair=symbol.toUpperCase()==='ETH-EUR'?'ETHEUR':symbol.toUpperCase().replace('-','');
-    const u=`https://api.kraken.com/0/public/Ticker?pair=${encodeURIComponent(pair)}`;
-    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'DepotCockpit/5.10.4'}});
-    const text=await r.text();
-    if(r.ok){
-      const x=JSON.parse(text);
-      if(Array.isArray(x?.error) && x.error.length===0){
-        const first=Object.values(x?.result||{})[0];
-        const price=Number(first?.c?.[0]);
-        if(price>0){
-          const iso=new Date().toISOString();
-          return {
-            id:p.id,ok:true,latest:{price:Number(price.toFixed(6)),date:iso.slice(0,10)},
-            source:'ETH/EUR · Kraken',usedVenue:'Crypto',currency:'EUR',
-            sourceMeta:{provider:'KRAKEN_PUBLIC',sourceKind:'ETH/EUR letzter Trade · 24/7',delayedMinutes:0,asOf:iso,symbol:'ETHEUR'}
-          };
-        }
-      }
-    }
-  }catch{}
-
-  // Coinbase and Yahoo remain fallbacks only; both were unreliable from the deployed Vercel runtime.
-  try{
-    const product=symbol.toUpperCase()==='ETH-EUR'?'ETH-EUR':symbol.toUpperCase();
-    const u=`https://api.exchange.coinbase.com/products/${encodeURIComponent(product)}/ticker`;
-    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'DepotCockpit/5.10.4'}});
-    const text=await r.text();
-    if(r.ok){
-      const x=JSON.parse(text), price=Number(x?.price);
-      if(price>0){
-        const iso=x?.time && !Number.isNaN(new Date(x.time).getTime()) ? new Date(x.time).toISOString() : new Date().toISOString();
-        return {
-          id:p.id,ok:true,latest:{price:Number(price.toFixed(6)),date:iso.slice(0,10)},
-          source:`${product} · Coinbase Exchange`,usedVenue:'Crypto',currency:'EUR',
-          sourceMeta:{provider:'COINBASE_EXCHANGE',sourceKind:`${product} letzter Trade`,delayedMinutes:0,asOf:iso,symbol:product}
-        };
-      }
-    }
-  }catch{}
-
-  try{
-    const pair=symbol.toUpperCase()==='ETH-EUR'?'ETH-EUR':symbol.toUpperCase();
-    const u=`https://api.coinbase.com/v2/prices/${encodeURIComponent(pair)}/spot`;
-    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'DepotCockpit/5.10.4'}});
-    const text=await r.text();
-    if(r.ok){
-      const x=JSON.parse(text), price=Number(x?.data?.amount);
-      if(price>0){
-        const iso=new Date().toISOString();
-        return {
-          id:p.id,ok:true,latest:{price:Number(price.toFixed(6)),date:iso.slice(0,10)},
-          source:`${pair} · Coinbase Spot`,usedVenue:'Crypto',currency:'EUR',
-          sourceMeta:{provider:'COINBASE_SPOT',sourceKind:`${pair} Spotpreis`,delayedMinutes:0,asOf:iso,symbol:pair}
-        };
-      }
-    }
-  }catch{}
-
-  try{
-    const u=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=5m&includePrePost=true`;
-    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'Mozilla/5.0 DepotCockpit/5.10.4'}});
-    const text=await r.text(); if(!r.ok) throw new Error(`Yahoo ${r.status}`);
-    const x=JSON.parse(text), rr=x?.chart?.result?.[0]; if(!rr) throw new Error('Yahoo no result');
-    let price=Number(rr?.meta?.regularMarketPrice), asOf=Number(rr?.meta?.regularMarketTime);
-    if(!(price>0)){
-      const closes=rr?.indicators?.quote?.[0]?.close||[], ts=rr?.timestamp||[];
-      for(let i=closes.length-1;i>=0;i--){const n=Number(closes[i]);if(n>0){price=n;asOf=Number(ts[i]);break;}}
-    }
-    if(!(price>0)) return null;
-    const iso=new Date((asOf||Math.floor(Date.now()/1000))*1000).toISOString();
-    return {
-      id:p.id,ok:true,latest:{price:Number(price.toFixed(6)),date:iso.slice(0,10)},
-      source:`${symbol} · Yahoo Fallback`,usedVenue:'Crypto',currency:'EUR',
-      sourceMeta:{provider:'YAHOO_CRYPTO_FALLBACK',sourceKind:`${symbol} 24/7`,delayedMinutes:5,asOf:iso,symbol}
-    };
-  }catch{return null}
-}
-
-async function trilogyResult(p){
-  try{
-    const [tmq,fx]=await Promise.all([yahooChart('TMQ'),yahooChart('EURUSD=X')]);
-    const eur=tmq.price/fx.price;
-    if(!(eur>0)) return null;
-    return {
-      id:p.id,ok:true,latest:{price:Number(eur.toFixed(6)),date:tmq.asOf.slice(0,10)},
-      source:'TMQ (NYSE American) · EUR/USD umgerechnet',usedVenue:'NYSE American',currency:'EUR',
-      sourceMeta:{provider:'YAHOO_TMQ',sourceKind:'TMQ Schlusskurs in EUR',priceUsd:tmq.price,eurUsd:fx.price,asOf:tmq.asOf}
-    };
-  }catch{return null}
-}
-
 function cacheCompleteFor(ids){
   if(!(cache.savedAt && Date.now()-cache.savedAt<SERVER_TTL_MS)) return false;
   return ids.every(id=>cache.items[id]?.ok && Number.isFinite(Number(cache.items[id]?.latest?.price)));
@@ -425,8 +328,7 @@ export default async function handler(req,res){
     });
   }
 
-  const cryptoPositions=positions.filter(p=>p.dataSource==='CRYPTO_YAHOO');
-  const dbPositions=positions.filter(p=>p.id!=='trilogy' && p.dataSource!=='MANUAL' && p.dataSource!=='CRYPTO_YAHOO');
+  const dbPositions=positions.filter(p=>p.id!=='trilogy' && p.dataSource!=='MANUAL' && !['CRYPTO_YAHOO','CRYPTO_DIRECT'].includes(p.dataSource));
   const trilogy=positions.find(p=>p.id==='trilogy');
   const db=await scanDeutscheBoerse(dbPositions);
   const resultMap=new Map([...db.hits.entries()]);
@@ -442,16 +344,6 @@ export default async function handler(req,res){
       resultMap.set(p.id,x);eodhdFound++;
       const d=positionDiagnostics.find(z=>z.id===p.id);
       if(d){d.status='FOUND';d.statusLabel='EODHD-Fallback';d.source=x.source}
-    }
-  }
-
-  for(const p of cryptoPositions){
-    const c=await cryptoResult(p);
-    if(c){
-      resultMap.set(p.id,c);
-      positionDiagnostics.push({id:p.id,name:p.name,status:'FOUND',statusLabel:'Krypto 24/7 in EUR',source:c.source});
-    }else{
-      positionDiagnostics.push({id:p.id,name:p.name,status:'NOT_FOUND',statusLabel:'Krypto-Kurs nicht geliefert',source:null});
     }
   }
 
@@ -474,7 +366,7 @@ export default async function handler(req,res){
   const results=[...resultMap.values()];
   cache.savedAt=Date.now();
   cache.items=Object.fromEntries(results.map(x=>[x.id,x]));
-  cache.diagnostics={...db.diagnostics,eodhdRequests,eodhdFound,trilogyFound:resultMap.has('trilogy'),cryptoRequested:cryptoPositions.length,cryptoFound:cryptoPositions.filter(p=>resultMap.has(p.id)).length};
+  cache.diagnostics={...db.diagnostics,eodhdRequests,eodhdFound,trilogyFound:resultMap.has('trilogy')};
 
   return send(res,200,{
     ok:true,version:'5.9.0',generatedAt:new Date().toISOString(),

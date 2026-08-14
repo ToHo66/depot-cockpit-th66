@@ -1,12 +1,10 @@
-Beim Einspielen von 5.10.4 diese unmittelbar vorherigen Release-Dateien ersetzen/löschen:
-app-preload-5103.js
-app-release-5103.js
-README_5.10.3.txt
-
-Aktiv bleiben nur:
+Beim Einspielen von 5.10.5 diese vorherigen Release-Dateien entfernen, falls noch vorhanden:
 app-preload-5104.js
-app.js (stabiler Kern)
 app-release-5104.js
+README_5.10.4.txt
+
+Aktiv in 5.10.5:
+app-preload-5105.js
+app-release-5105.js
+api/crypto-quote-v1.js
 api/market-data-v3.js
-api/instrument-search-v2.js
-api/spacex-quote-v1.js
