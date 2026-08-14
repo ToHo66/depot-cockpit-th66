@@ -1,16 +1,12 @@
-Nach erfolgreichem Deployment von 5.10.3 im Repository entfernen, falls noch vorhanden:
-app-preload-5102.js
-app-release-5102.js
-app-preload-5101.js
-app-release-5101.js
-app-597-preload.js
-app-598-preload.js
-app-599-preload.js
-app-5100-preload.js
-app-590.js
-app-592.js
-app-595.js
-app-596.js
+Beim Einspielen von 5.10.4 diese unmittelbar vorherigen Release-Dateien ersetzen/löschen:
+app-preload-5103.js
+app-release-5103.js
+README_5.10.3.txt
 
-5.10.3 enthält ausschließlich die aktiven konsolidierten Release-Dateien 5103.
-api/market-data-v3.js wird ersetzt, nicht zusätzlich dupliziert.
+Aktiv bleiben nur:
+app-preload-5104.js
+app.js (stabiler Kern)
+app-release-5104.js
+api/market-data-v3.js
+api/instrument-search-v2.js
+api/spacex-quote-v1.js

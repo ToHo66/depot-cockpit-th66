@@ -307,12 +307,35 @@ async function yahooChart(symbol){
 async function cryptoResult(p){
   const symbol=String(p.analysisSymbol||p.marketSymbol||'ETH-EUR').trim()||'ETH-EUR';
 
-  // 5.10.3: use Coinbase's documented unauthenticated EUR endpoints first.
-  // Yahoo remains only as a final fallback because it did not reliably return ETH-EUR on Vercel.
+  // 5.10.4: Kraken is the primary ETH/EUR source. The public ticker endpoint
+  // needs no API key and returns the last traded price in EUR directly.
+  try{
+    const pair=symbol.toUpperCase()==='ETH-EUR'?'ETHEUR':symbol.toUpperCase().replace('-','');
+    const u=`https://api.kraken.com/0/public/Ticker?pair=${encodeURIComponent(pair)}`;
+    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'DepotCockpit/5.10.4'}});
+    const text=await r.text();
+    if(r.ok){
+      const x=JSON.parse(text);
+      if(Array.isArray(x?.error) && x.error.length===0){
+        const first=Object.values(x?.result||{})[0];
+        const price=Number(first?.c?.[0]);
+        if(price>0){
+          const iso=new Date().toISOString();
+          return {
+            id:p.id,ok:true,latest:{price:Number(price.toFixed(6)),date:iso.slice(0,10)},
+            source:'ETH/EUR · Kraken',usedVenue:'Crypto',currency:'EUR',
+            sourceMeta:{provider:'KRAKEN_PUBLIC',sourceKind:'ETH/EUR letzter Trade · 24/7',delayedMinutes:0,asOf:iso,symbol:'ETHEUR'}
+          };
+        }
+      }
+    }
+  }catch{}
+
+  // Coinbase and Yahoo remain fallbacks only; both were unreliable from the deployed Vercel runtime.
   try{
     const product=symbol.toUpperCase()==='ETH-EUR'?'ETH-EUR':symbol.toUpperCase();
     const u=`https://api.exchange.coinbase.com/products/${encodeURIComponent(product)}/ticker`;
-    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'DepotCockpit/5.10.3'}});
+    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'DepotCockpit/5.10.4'}});
     const text=await r.text();
     if(r.ok){
       const x=JSON.parse(text), price=Number(x?.price);
@@ -330,7 +353,7 @@ async function cryptoResult(p){
   try{
     const pair=symbol.toUpperCase()==='ETH-EUR'?'ETH-EUR':symbol.toUpperCase();
     const u=`https://api.coinbase.com/v2/prices/${encodeURIComponent(pair)}/spot`;
-    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'DepotCockpit/5.10.3'}});
+    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'DepotCockpit/5.10.4'}});
     const text=await r.text();
     if(r.ok){
       const x=JSON.parse(text), price=Number(x?.data?.amount);
@@ -347,7 +370,7 @@ async function cryptoResult(p){
 
   try{
     const u=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1d&interval=5m&includePrePost=true`;
-    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'Mozilla/5.0 DepotCockpit/5.10.3'}});
+    const r=await fetch(u,{headers:{Accept:'application/json','User-Agent':'Mozilla/5.0 DepotCockpit/5.10.4'}});
     const text=await r.text(); if(!r.ok) throw new Error(`Yahoo ${r.status}`);
     const x=JSON.parse(text), rr=x?.chart?.result?.[0]; if(!rr) throw new Error('Yahoo no result');
     let price=Number(rr?.meta?.regularMarketPrice), asOf=Number(rr?.meta?.regularMarketTime);
