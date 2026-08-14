@@ -1,12 +1,6 @@
-Nach erfolgreichem Einspielen von 5.10.1 aus dem Repository löschen:
+Nach erfolgreichem Deployment von 5.10.2 im Repository entfernen, falls noch vorhanden:
+app-preload-5101.js
+app-release-5101.js
+README_5.10.1.txt
 
-app-597-preload.js
-app-598-preload.js
-app-599-preload.js
-app-5100-preload.js
-app-590.js
-app-592.js
-app-595.js
-app-596.js
-
-Diese Dateien werden von index.html 5.10.1 nicht mehr referenziert.
+5.10.2 enthält ausschließlich die aktiven konsolidierten Release-Dateien 5102.
