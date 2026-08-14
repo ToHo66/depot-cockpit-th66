@@ -1,6 +1,16 @@
-Nach erfolgreichem Deployment von 5.10.2 im Repository entfernen, falls noch vorhanden:
+Nach erfolgreichem Deployment von 5.10.3 im Repository entfernen, falls noch vorhanden:
+app-preload-5102.js
+app-release-5102.js
 app-preload-5101.js
 app-release-5101.js
-README_5.10.1.txt
+app-597-preload.js
+app-598-preload.js
+app-599-preload.js
+app-5100-preload.js
+app-590.js
+app-592.js
+app-595.js
+app-596.js
 
-5.10.2 enthält ausschließlich die aktiven konsolidierten Release-Dateien 5102.
+5.10.3 enthält ausschließlich die aktiven konsolidierten Release-Dateien 5103.
+api/market-data-v3.js wird ersetzt, nicht zusätzlich dupliziert.
