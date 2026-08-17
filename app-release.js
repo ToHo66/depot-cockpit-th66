@@ -1,4 +1,4 @@
-/* Depot-Cockpit Professional 5.11.0
+/* Depot-Cockpit Professional 5.11.1
    CLEAN CONSOLIDATED RELEASE LAYER
    Replaces active app-590.js + app-592.js + app-595.js.
    SpaceX diagnostic app-596.js is retired because quote routing is now part of the normal market-data path.
@@ -15,8 +15,8 @@
   'use strict';
 
   const UI = { broker: 'all', asset: 'alle', period: 'day', analysis: 'performance' };
-  const BUILD_VERSION = '5.11.0';
-  const BUILD_STAMP = 'BUILD CLEAN-CORE-RESET · 2026-08-15 · 18:23';
+  const BUILD_VERSION = '5.11.1';
+  const BUILD_STAMP = 'BUILD ETHEREUM-SERVER-QUOTE · 2026-08-17 · 11:37';
 
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -30,6 +30,7 @@
 
   function inferredType(p) {
     const explicit = String(p.assetType || p.type || '').toLowerCase();
+    if (explicit.includes('crypto') || explicit.includes('krypto') || /ethereum|ether|eth/i.test(String(p.name || ''))) return 'crypto';
     if (explicit.includes('etf')) return 'etfs';
     if (explicit.includes('aktie') || explicit.includes('stock')) return 'aktien';
     if (explicit.includes('roh') || explicit.includes('etc') || explicit.includes('gold')) return 'rohstoffe';
@@ -481,7 +482,7 @@
 
 
 
-/* Depot-Cockpit 5.11.0 – DATA CORE V3
+/* Depot-Cockpit 5.11.1 – DATA CORE V3
    Ein einziger Kurs-Endpunkt:
    Deutsche Börse Xetra Post-Trade -> Xetra Pre-Trade -> EODHD nur für Rest -> Trilogy TMQ.
    Keine separaten market-fallback/trilogy Endpunkte mehr.
@@ -489,7 +490,7 @@
 (() => {
   'use strict';
 
-  const CORE_VERSION = '5.11.0';
+  const CORE_VERSION = '5.11.1';
 
   function correctInstrumentMaster590() {
     const fixes = {
@@ -511,8 +512,23 @@
     }
   }
 
+  function isCryptoPosition5111(p) {
+    const explicit = String(p?.assetType || p?.type || '').toLowerCase();
+    const name = String(p?.name || '').toLowerCase();
+    return explicit.includes('crypto') || explicit.includes('krypto') || name.includes('ethereum') || name === 'ether';
+  }
+
+  function cryptoPayload5111(p) {
+    return {
+      id:p.id,
+      name:p.name || 'Ethereum',
+      symbol:'ETH',
+      quote:'EUR'
+    };
+  }
+
   function payload590() {
-    return state.positions.map(p => ({
+    return state.positions.filter(p => !isCryptoPosition5111(p)).map(p => ({
       id:p.id,
       name:p.name,
       isin:p.isin || '',
@@ -556,11 +572,12 @@
     const b = document.getElementById('refreshBtn');
     if (b) { b.disabled = true; b.textContent = '…'; }
 
-    showDiagnostic('Datenkern 5.11.0 prüft alle Depotpositionen', [
+    showDiagnostic('Datenkern 5.11.1 prüft alle Depotpositionen', [
       '1. Xetra Post-Trade: echter letzter Handel.',
       '2. Falls dort kein Trade gefunden wird: Xetra Pre-Trade mit Bid/Ask-Mittelwert.',
       '3. Nur verbleibende Fehlstellen: EODHD-Fallback.',
       '4. Trilogy Metals: TMQ (NYSE American) mit EUR/USD-Umrechnung.',
+      '5. Ethereum: eigener serverseitiger ETH/EUR-Endpunkt (Coinbase, Kraken-Fallback).',
       'Vorhandene gültige gespeicherte Kurse werden bei Fehlschlägen nicht gelöscht.'
     ]);
 
@@ -579,13 +596,38 @@
         throw new Error(body?.error || `Market Data V3 HTTP ${response.status}`);
       }
 
+      const marketResults = (body.results || []).filter(x => x?.ok);
+      const cryptoResults = [];
+      const cryptoDiagnostics = [];
+      for (const p of state.positions.filter(isCryptoPosition5111)) {
+        try {
+          const cryptoCall = await fetchJsonWithTimeout(
+            '/api/crypto-quote',
+            {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify(cryptoPayload5111(p))
+            },
+            12000
+          );
+          if (cryptoCall.response.ok && cryptoCall.body?.ok && Number.isFinite(Number(cryptoCall.body?.latest?.price))) {
+            cryptoResults.push(cryptoCall.body);
+            cryptoDiagnostics.push(`${p.name}: ${eur(Number(cryptoCall.body.latest.price))} · ${cryptoCall.body.sourceMeta?.provider || 'Krypto'}`);
+          } else {
+            cryptoDiagnostics.push(`${p.name}: kein neuer Kurs · ${cryptoCall.body?.error || `HTTP ${cryptoCall.response.status}`}`);
+          }
+        } catch (error) {
+          cryptoDiagnostics.push(`${p.name}: kein neuer Kurs · ${error?.message || String(error)}`);
+        }
+      }
+
       const snapshot = {
         ok:true,
-        provider:'Depot-Cockpit Market Data V3',
+        provider:'Depot-Cockpit Market Data + Crypto',
         generatedAt:body.generatedAt || new Date().toISOString(),
         requestedIds:state.positions.map(p => p.id),
-        results:(body.results || []).filter(x => x?.ok),
-        diagnostics:body.diagnostics || {}
+        results:[...marketResults, ...cryptoResults],
+        diagnostics:{...(body.diagnostics || {}), crypto:cryptoDiagnostics}
       };
 
       const {stored, mode} = await persistAndApplySnapshot(snapshot);
@@ -593,21 +635,23 @@
       render();
 
       const report = body.positionDiagnostics || [];
+      const complete5111 = Object.keys(stored.items || {}).length === state.positions.length;
       const lines = [
         `Speicher: ${mode}`,
-        `Neue Treffer dieses Laufs: ${(body.results || []).filter(x=>x?.ok).length}/${state.positions.length}`,
+        `Neue Treffer dieses Laufs: ${snapshot.results.length}/${state.positions.length}`,
         `Gespeicherte verwertbare Kursreihen: ${Object.keys(stored.items || {}).length}/${state.positions.length}`,
-        ...report.map(r => `${r.name}: ${r.statusLabel || r.status || 'unbekannt'}${r.source ? ' · '+r.source : ''}`)
+        ...report.map(r => `${r.name}: ${r.statusLabel || r.status || 'unbekannt'}${r.source ? ' · '+r.source : ''}`),
+        ...cryptoDiagnostics
       ];
 
       showDiagnostic(
-        body.complete ? 'Datenkern 5.11.0: vollständige Versorgung' : 'Datenkern 5.11.0: Prüfung abgeschlossen',
+        complete5111 ? 'Datenkern 5.11.1: vollständige Versorgung' : 'Datenkern 5.11.1: Prüfung abgeschlossen',
         lines,
-        body.complete ? 'success' : 'info'
+        complete5111 ? 'success' : 'info'
       );
       toast(`${Object.keys(stored.items || {}).length}/${state.positions.length} Positionen verwertbar`);
     } catch (error) {
-      showDiagnostic('Datenkern 5.11.0 fehlgeschlagen', [
+      showDiagnostic('Datenkern 5.11.1 fehlgeschlagen', [
         error?.message || String(error),
         'Bereits gespeicherte gültige Kurse bleiben unverändert erhalten.'
       ], 'error');
@@ -637,7 +681,7 @@
 
 
 
-/* Depot-Cockpit Professional 5.11.0
+/* Depot-Cockpit Professional 5.11.1
    TRANSACTION-CORRECTION
    - externe Live-Instrumentsuche (EODHD Search API via Server)
    - neue Instrumente erhalten eine Kursquelle statt automatisch MANUAL
@@ -650,7 +694,7 @@
 (() => {
   'use strict';
 
-  const BUILD = '5.11.0';
+  const BUILD = '5.11.1';
 
   const txEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -1041,7 +1085,7 @@
 })();
 
 
-/* Depot-Cockpit Professional 5.11.0
+/* Depot-Cockpit Professional 5.11.1
    PERSISTENCE-GUARD
    Additive safety layer only:
    - does NOT change market-data-v3.js
@@ -1052,8 +1096,8 @@
 (() => {
   'use strict';
 
-  const VERSION_595 = '5.11.0';
-  const BUILD_595 = 'BUILD CLEAN-CORE-RESET · 2026-08-15 · 18:23';
+  const VERSION_595 = '5.11.1';
+  const BUILD_595 = 'BUILD ETHEREUM-SERVER-QUOTE · 2026-08-17 · 11:37';
   const TRANSFER_PREFIX = '#dc-transfer=';
   const MAX_TRANSFER_CHARS = 70000;
 

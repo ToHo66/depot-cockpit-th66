@@ -1,63 +1,9 @@
-DEPOT-COCKPIT 5.11.0 – EINMALIGE BEREINIGUNG
+5.11.1: Keine zusätzlichen Löschungen erforderlich, sofern 5.11.0 Clean Core bereits sauber eingespielt wurde.
 
-Vor dem Hochladen dieser Version bitte ALTE RUNTIME-DATEIEN löschen.
-Behalten: app.js, styles.css, styles-580.css, manifest.webmanifest, package.json, vercel.json, MASTERDATEI.json, public/, tests/.
+Nicht wieder anlegen:
+- app-release-<version>.js
+- app-preload-<version>.js
+- crypto-quote-v1.js / crypto-quote-v2.js usw.
 
-ZU LÖSCHEN IM PROJEKT-ROOT:
-app-5100-preload.js
-app-563.js
-app-564.js
-app-565.js
-app-570.js
-app-580.js
-app-581.js
-app-590.js
-app-591.js
-app-592.js
-app-595.js
-app-596.js
-app-597-preload.js
-app-598-preload.js
-app-599-preload.js
-app-preload-5101.js
-app-preload-5102.js
-app-preload-5103.js
-app-preload-5104.js
-app-preload-5105.js
-app-release-5101.js
-app-release-5102.js
-app-release-5103.js
-app-release-5104.js
-app-release-5105.js
-index-old.html
-styles-563.css
-styles-564.css
-styles-565.css
-styles-570.css
-crypto-quote-v1.js
-diagnose-market.js
-health.js
-instrument-search.js
-instrument-search-v2.js
-instrument-search-v2 2.js
-market-data.js
-market-data-v2.js
-market-data-v3.js
-spacex-quote-v1.js
-trilogy-quote.js
-
-IM ORDNER /api LÖSCHEN, WENN VORHANDEN:
-market-data.js
-market-data-v2.js
-instrument-search.js
-diagnose-market.js
-
-DANACH AUS DIESEM PAKET HOCHLADEN:
-index.html
-app-preload.js
-app-release.js
-api/market-data-v3.js
-api/spacex-quote-v1.js
-api/instrument-search-v2.js
-
-WICHTIG: Die drei API-Dateien müssen im Ordner /api bleiben und dürfen nicht ins Root verschoben werden.
+Aktiver fester Krypto-Endpunkt ab jetzt:
+- api/crypto-quote.js
