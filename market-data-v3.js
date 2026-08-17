@@ -304,6 +304,19 @@ async function yahooChart(symbol){
   }
   throw new Error('Yahoo no price');
 }
+async function trilogyResult(p){
+  try{
+    const [tmq,fx]=await Promise.all([yahooChart('TMQ'),yahooChart('EURUSD=X')]);
+    const eur=tmq.price/fx.price;
+    if(!(eur>0)) return null;
+    return {
+      id:p.id,ok:true,latest:{price:Number(eur.toFixed(6)),date:tmq.asOf.slice(0,10)},
+      source:'TMQ (NYSE American) · EUR/USD umgerechnet',usedVenue:'NYSE American',currency:'EUR',
+      sourceMeta:{provider:'YAHOO_TMQ',sourceKind:'TMQ Schlusskurs in EUR',priceUsd:tmq.price,eurUsd:fx.price,asOf:tmq.asOf}
+    };
+  }catch{return null}
+}
+
 function cacheCompleteFor(ids){
   if(!(cache.savedAt && Date.now()-cache.savedAt<SERVER_TTL_MS)) return false;
   return ids.every(id=>cache.items[id]?.ok && Number.isFinite(Number(cache.items[id]?.latest?.price)));
@@ -328,7 +341,7 @@ export default async function handler(req,res){
     });
   }
 
-  const dbPositions=positions.filter(p=>p.id!=='trilogy' && p.dataSource!=='MANUAL' && !['CRYPTO_YAHOO','CRYPTO_DIRECT'].includes(p.dataSource));
+  const dbPositions=positions.filter(p=>p.id!=='trilogy' && p.dataSource!=='MANUAL');
   const trilogy=positions.find(p=>p.id==='trilogy');
   const db=await scanDeutscheBoerse(dbPositions);
   const resultMap=new Map([...db.hits.entries()]);
