@@ -1,4 +1,4 @@
-/* Depot-Cockpit Professional 5.11.2
+/* Depot-Cockpit Professional 5.11.3
    CLEAN CONSOLIDATED PRELOAD
    Replaces: app-597-preload.js, app-598-preload.js, app-599-preload.js, app-5100-preload.js.
 
@@ -11,7 +11,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '5.11.2';
+  const VERSION = '5.11.3';
   const STORE = 'th66-professional-master-v5';
   const BACKUP = 'th66-professional-master-v5-regression-lock';
   const HISTORY = 'th66-professional-master-v5-history';
@@ -100,7 +100,7 @@
         archive:[],
         transactions:[],
         settings:{},
-        initializedBy:'5.11.2-fresh-canonical-14'
+        initializedBy:'5.11.3-fresh-canonical-14'
       };
       nativeSetItem.call(localStorage, STORE, JSON.stringify(fresh));
       return {changed:true, mode:'fresh-seed', count:fresh.positions.length};
@@ -120,7 +120,7 @@
     }
     if (changed) {
       existing.savedAt = new Date().toISOString();
-      existing.repairedBy = '5.11.2-required-positions';
+      existing.repairedBy = '5.11.3-required-positions';
       nativeSetItem.call(localStorage, STORE, JSON.stringify(existing));
     }
     return {changed, mode:'existing-merge', count:(existing.positions || []).length};
@@ -247,7 +247,7 @@
       if(JSON.stringify(p[k])!==JSON.stringify(v)){p[k]=v;changed=true;changes.push(k);}
     }
     if(changed){
-      writeBackup(raw,'pre-5.11.2-spacex-normalize');
+      writeBackup(raw,'pre-5.11.3-spacex-normalize');
       snap.savedAt=new Date().toISOString();
       snap.normalized5101={at:snap.savedAt, isin:SPACEX.isin, changes:[...new Set(changes)]};
       nativeSetItem.call(localStorage, STORE, JSON.stringify(snap));
@@ -272,5 +272,5 @@
   };
 
   window.__DC_PRELOAD__={version:VERSION,store:STORE,backup:BACKUP,history:HISTORY,portfolio:portfolioResult,spaceX:spaceXResult};
-  console.info('Depot-Cockpit 5.11.2 clean preload active', window.__DC_PRELOAD__);
+  console.info('Depot-Cockpit 5.11.3 clean preload active', window.__DC_PRELOAD__);
 })();

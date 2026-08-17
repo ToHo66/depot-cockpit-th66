@@ -317,6 +317,41 @@ async function trilogyResult(p){
   }catch{return null}
 }
 
+
+async function fetchJson(url, timeout=7000){
+  const c=new AbortController(), timer=setTimeout(()=>c.abort(),timeout);
+  try{
+    const r=await fetch(url,{signal:c.signal,cache:'no-store',headers:{Accept:'application/json','User-Agent':'Depot-Cockpit-TH66/5.11.3'}});
+    const text=await r.text();
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    return JSON.parse(text);
+  } finally { clearTimeout(timer) }
+}
+async function ethereumResult(p){
+  const errors=[];
+  try{
+    const x=await fetchJson('https://api.kraken.com/0/public/Ticker?pair=ETHEUR');
+    const obj=x?.result && Object.values(x.result)[0];
+    const price=Number(obj?.c?.[0]);
+    if(Number.isFinite(price)&&price>0) return {
+      id:p.id,ok:true,latest:{price,date:isoDay(new Date())},source:'Kraken · ETH/EUR',usedVenue:'Kraken',currency:'EUR',
+      sourceMeta:{provider:'KRAKEN',sourceKind:'ETH/EUR letzter Handel',delayedMinutes:0,asOf:new Date().toISOString()}
+    };
+  }catch(e){errors.push('Kraken: '+(e?.message||e))}
+  try{
+    const x=await fetchJson('https://api.coinbase.com/v2/prices/ETH-EUR/spot');
+    const price=Number(x?.data?.amount);
+    if(Number.isFinite(price)&&price>0) return {
+      id:p.id,ok:true,latest:{price,date:isoDay(new Date())},source:'Coinbase · ETH/EUR',usedVenue:'Coinbase',currency:'EUR',
+      sourceMeta:{provider:'COINBASE',sourceKind:'ETH/EUR Spot',delayedMinutes:0,asOf:new Date().toISOString()}
+    };
+  }catch(e){errors.push('Coinbase: '+(e?.message||e))}
+  return {id:p.id,ok:false,error:errors.join(' | ')||'Kein ETH/EUR-Kurs'};
+}
+function isCryptoPosition(p){
+  return String(p?.dataSource||'').toUpperCase()==='CRYPTO' || String(p?.analysisExchangeCode||'').toUpperCase()==='CRYPTO' || /ethereum|ether/i.test(String(p?.name||''));
+}
+
 function cacheCompleteFor(ids){
   if(!(cache.savedAt && Date.now()-cache.savedAt<SERVER_TTL_MS)) return false;
   return ids.every(id=>cache.items[id]?.ok && Number.isFinite(Number(cache.items[id]?.latest?.price)));
@@ -332,7 +367,7 @@ export default async function handler(req,res){
   if(cacheCompleteFor(ids)){
     const results=ids.map(id=>cache.items[id]).filter(Boolean);
     return send(res,200,{
-      ok:true,version:'5.9.0',generatedAt:new Date(cache.savedAt).toISOString(),
+      ok:true,version:'5.11.3',generatedAt:new Date(cache.savedAt).toISOString(),
       fromCache:true,complete:true,results,
       positionDiagnostics:positions.map(p=>({
         id:p.id,name:p.name,status:'FOUND',statusLabel:'Cache · gültiger Kurs',source:cache.items[p.id]?.source||''
@@ -341,7 +376,8 @@ export default async function handler(req,res){
     });
   }
 
-  const dbPositions=positions.filter(p=>p.id!=='trilogy' && p.dataSource!=='MANUAL');
+  const cryptoPositions=positions.filter(isCryptoPosition);
+  const dbPositions=positions.filter(p=>p.id!=='trilogy' && p.dataSource!=='MANUAL' && !isCryptoPosition(p));
   const trilogy=positions.find(p=>p.id==='trilogy');
   const db=await scanDeutscheBoerse(dbPositions);
   const resultMap=new Map([...db.hits.entries()]);
@@ -357,6 +393,16 @@ export default async function handler(req,res){
       resultMap.set(p.id,x);eodhdFound++;
       const d=positionDiagnostics.find(z=>z.id===p.id);
       if(d){d.status='FOUND';d.statusLabel='EODHD-Fallback';d.source=x.source}
+    }
+  }
+
+  for(const p of cryptoPositions){
+    const c=await ethereumResult(p);
+    if(c?.ok){
+      resultMap.set(p.id,c);
+      positionDiagnostics.push({id:p.id,name:p.name,status:'FOUND',statusLabel:'ETH/EUR',source:c.source});
+    }else{
+      positionDiagnostics.push({id:p.id,name:p.name,status:'NOT_FOUND',statusLabel:'ETH/EUR nicht geliefert',source:null,error:c?.error||null});
     }
   }
 
@@ -379,10 +425,10 @@ export default async function handler(req,res){
   const results=[...resultMap.values()];
   cache.savedAt=Date.now();
   cache.items=Object.fromEntries(results.map(x=>[x.id,x]));
-  cache.diagnostics={...db.diagnostics,eodhdRequests,eodhdFound,trilogyFound:resultMap.has('trilogy')};
+  cache.diagnostics={...db.diagnostics,eodhdRequests,eodhdFound,trilogyFound:resultMap.has('trilogy'),cryptoRequested:cryptoPositions.length,cryptoFound:cryptoPositions.filter(p=>resultMap.has(p.id)).length};
 
   return send(res,200,{
-    ok:true,version:'5.9.0',generatedAt:new Date().toISOString(),
+    ok:true,version:'5.11.3',generatedAt:new Date().toISOString(),
     fromCache:false,complete:ids.every(id=>resultMap.has(id)),
     results,positionDiagnostics,
     diagnostics:cache.diagnostics,

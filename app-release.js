@@ -1,4 +1,4 @@
-/* Depot-Cockpit Professional 5.11.2
+/* Depot-Cockpit Professional 5.11.3
    CLEAN CONSOLIDATED RELEASE LAYER
    Replaces active app-590.js + app-592.js + app-595.js.
    SpaceX diagnostic app-596.js is retired because quote routing is now part of the normal market-data path.
@@ -15,8 +15,8 @@
   'use strict';
 
   const UI = { broker: 'all', asset: 'alle', period: 'day', analysis: 'performance' };
-  const BUILD_VERSION = '5.11.2';
-  const BUILD_STAMP = 'BUILD FRESH-INSTALL-14-FIX · 2026-08-17 · 12:07';
+  const BUILD_VERSION = '5.11.3';
+  const BUILD_STAMP = 'BUILD UNIFIED-MARKET-CORE · 2026-08-17 · 15:13';
 
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -482,7 +482,7 @@
 
 
 
-/* Depot-Cockpit 5.11.2 – DATA CORE V3
+/* Depot-Cockpit 5.11.3 – DATA CORE V3
    Ein einziger Kurs-Endpunkt:
    Deutsche Börse Xetra Post-Trade -> Xetra Pre-Trade -> EODHD nur für Rest -> Trilogy TMQ.
    Keine separaten market-fallback/trilogy Endpunkte mehr.
@@ -490,7 +490,7 @@
 (() => {
   'use strict';
 
-  const CORE_VERSION = '5.11.2';
+  const CORE_VERSION = '5.11.3';
 
   function correctInstrumentMaster590() {
     const fixes = {
@@ -513,9 +513,8 @@
   }
 
   function isCryptoPosition5111(p) {
-    const explicit = String(p?.assetType || p?.type || '').toLowerCase();
-    const name = String(p?.name || '').toLowerCase();
-    return explicit.includes('crypto') || explicit.includes('krypto') || name.includes('ethereum') || name === 'ether';
+    // 5.11.3: Krypto wird im gemeinsamen Server-Endpunkt market-data-v3 verarbeitet.
+    return false;
   }
 
   function cryptoPayload5111(p) {
@@ -572,12 +571,12 @@
     const b = document.getElementById('refreshBtn');
     if (b) { b.disabled = true; b.textContent = '…'; }
 
-    showDiagnostic('Datenkern 5.11.2 prüft alle Depotpositionen', [
+    showDiagnostic('Datenkern 5.11.3 prüft alle Depotpositionen', [
       '1. Xetra Post-Trade: echter letzter Handel.',
       '2. Falls dort kein Trade gefunden wird: Xetra Pre-Trade mit Bid/Ask-Mittelwert.',
       '3. Nur verbleibende Fehlstellen: EODHD-Fallback.',
       '4. Trilogy Metals: TMQ (NYSE American) mit EUR/USD-Umrechnung.',
-      '5. Ethereum: eigener serverseitiger ETH/EUR-Endpunkt (Coinbase, Kraken-Fallback).',
+      '5. Ethereum: ETH/EUR direkt im gemeinsamen Market-Data-Core (Kraken/Coinbase).',
       'Vorhandene gültige gespeicherte Kurse werden bei Fehlschlägen nicht gelöscht.'
     ]);
 
@@ -645,13 +644,13 @@
       ];
 
       showDiagnostic(
-        complete5111 ? 'Datenkern 5.11.2: vollständige Versorgung' : 'Datenkern 5.11.2: Prüfung abgeschlossen',
+        complete5111 ? 'Datenkern 5.11.3: vollständige Versorgung' : 'Datenkern 5.11.3: Prüfung abgeschlossen',
         lines,
         complete5111 ? 'success' : 'info'
       );
       toast(`${Object.keys(stored.items || {}).length}/${state.positions.length} Positionen verwertbar`);
     } catch (error) {
-      showDiagnostic('Datenkern 5.11.2 fehlgeschlagen', [
+      showDiagnostic('Datenkern 5.11.3 fehlgeschlagen', [
         error?.message || String(error),
         'Bereits gespeicherte gültige Kurse bleiben unverändert erhalten.'
       ], 'error');
@@ -681,7 +680,7 @@
 
 
 
-/* Depot-Cockpit Professional 5.11.2
+/* Depot-Cockpit Professional 5.11.3
    TRANSACTION-CORRECTION
    - externe Live-Instrumentsuche (EODHD Search API via Server)
    - neue Instrumente erhalten eine Kursquelle statt automatisch MANUAL
@@ -694,7 +693,7 @@
 (() => {
   'use strict';
 
-  const BUILD = '5.11.2';
+  const BUILD = '5.11.3';
 
   const txEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -1085,7 +1084,7 @@
 })();
 
 
-/* Depot-Cockpit Professional 5.11.2
+/* Depot-Cockpit Professional 5.11.3
    PERSISTENCE-GUARD
    Additive safety layer only:
    - does NOT change market-data-v3.js
@@ -1096,8 +1095,8 @@
 (() => {
   'use strict';
 
-  const VERSION_595 = '5.11.2';
-  const BUILD_595 = 'BUILD FRESH-INSTALL-14-FIX · 2026-08-17 · 12:07';
+  const VERSION_595 = '5.11.3';
+  const BUILD_595 = 'BUILD UNIFIED-MARKET-CORE · 2026-08-17 · 15:13';
   const TRANSFER_PREFIX = '#dc-transfer=';
   const MAX_TRANSFER_CHARS = 70000;
 
