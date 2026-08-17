@@ -1,4 +1,4 @@
-/* Depot-Cockpit 5.11.1 — dedicated crypto quote endpoint.
+/* Depot-Cockpit 5.11.2 — dedicated crypto quote endpoint.
    Server-side only: avoids browser CORS and keeps crypto outside the equity/ETF routing core.
    Primary: Coinbase public ETH-EUR spot. Fallback: Kraken ETH/EUR public ticker.
 */
@@ -30,7 +30,7 @@ async function getJson(url, timeoutMs = 6500) {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'Depot-Cockpit/5.11.1'
+        'User-Agent': 'Depot-Cockpit/5.11.2'
       },
       signal: controller.signal
     });
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
   const name = String(input.name || 'Ethereum');
 
   if (symbol !== 'ETH' || quote !== 'EUR') {
-    res.status(400).json({ ok:false, id, error:'5.11.1 supports ETH/EUR only.' });
+    res.status(400).json({ ok:false, id, error:'5.11.2 supports ETH/EUR only.' });
     return;
   }
 

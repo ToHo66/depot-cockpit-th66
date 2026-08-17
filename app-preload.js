@@ -1,4 +1,4 @@
-/* Depot-Cockpit Professional 5.11.1
+/* Depot-Cockpit Professional 5.11.2
    CLEAN CONSOLIDATED PRELOAD
    Replaces: app-597-preload.js, app-598-preload.js, app-599-preload.js, app-5100-preload.js.
 
@@ -11,7 +11,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '5.11.1';
+  const VERSION = '5.11.2';
   const STORE = 'th66-professional-master-v5';
   const BACKUP = 'th66-professional-master-v5-regression-lock';
   const HISTORY = 'th66-professional-master-v5-history';
@@ -39,6 +39,92 @@
     assetType:'Aktie',
     type:'Aktie'
   });
+
+
+
+  const ETHEREUM = Object.freeze({
+    id:'ethereum',
+    name:'Ethereum',
+    isin:'',
+    wkn:'',
+    qty:3.363942,
+    broker:'Trade Republic',
+    brokerDisplaySource:'Trade Republic',
+    brokerVenue:'Krypto',
+    analysisVenue:'Krypto',
+    analysisExchangeCode:'CRYPTO',
+    exchangeCode:'CRYPTO',
+    fallbackVenues:[],
+    dataSource:'CRYPTO',
+    analysisSymbol:'ETH',
+    marketSymbol:'ETH',
+    currency:'EUR',
+    purchasePrice:3567.24,
+    purchaseTotal:12000,
+    assetType:'Krypto',
+    type:'Krypto'
+  });
+
+  const FRESH_CANONICAL_POSITIONS = Object.freeze([
+    {id:'allworld',name:'Vanguard FTSE All-World',isin:'IE00BK5BQT80',wkn:'A2PKXG',qty:327,broker:'sBroker',brokerDisplaySource:'Société Générale',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'VGWL',currency:'EUR',purchasePrice:157.422},
+    {id:'defence',name:'Future of Defence',isin:'IE000OJ5TQP4',wkn:'A3EB9T',qty:1518,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'ASWC',currency:'EUR',purchasePrice:14.75},
+    {id:'banks',name:'Amundi STOXX Europe 600 Banks',isin:'LU1834983477',wkn:'LYX01W',qty:310,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'LBNK',currency:'EUR',purchasePrice:45.115},
+    {id:'metals',name:'iShares Essential Metals Producers',isin:'IE000ROSD5J6',wkn:'A3ERLP',qty:1850,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'CEBT',currency:'EUR',purchasePrice:7.093},
+    {id:'worldit',name:'iShares MSCI World Information Technology',isin:'IE00BJ5JNY98',wkn:'A2PHCC',qty:780,broker:'sBroker',brokerDisplaySource:'Xetra',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'AYEW',currency:'EUR',purchasePrice:15.891},
+    {id:'semiconductor',name:'VanEck Semiconductor',isin:'IE00BMC38736',wkn:'A2QC5J',qty:98,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'VVSM',currency:'EUR',purchasePrice:89.377},
+    {id:'sap',name:'SAP SE',isin:'DE0007164600',wkn:'716460',qty:60,broker:'sBroker',brokerDisplaySource:'Xetra',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'SAP',currency:'EUR',purchasePrice:250.417},
+    {id:'fidelity',name:'Fidelity Global Quality Income',isin:'IE00BYXVGZ48',wkn:'A2DL7E',qty:580,broker:'sBroker',brokerDisplaySource:'Xetra',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'FGEQ',currency:'EUR',purchasePrice:9.855},
+    {id:'cyber',name:'L&G Cyber Security',isin:'IE00BYPLS672',wkn:'A14WU5',qty:141,broker:'sBroker',brokerDisplaySource:'Euronext Paris',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'USPY',currency:'EUR',purchasePrice:33.329},
+    {id:'gold',name:'Xetra-Gold',isin:'DE000A0S9GB0',wkn:'A0S9GB',qty:35,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'4GLD',currency:'EUR',purchasePrice:117.846},
+    {id:'ageing',name:'iShares Ageing Population',isin:'IE00BYZK4669',wkn:'A2ANH1',qty:150,broker:'sBroker',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Xetra',fallbackVenues:['Tradegate','Frankfurt'],dataSource:'DB_DELAYED',analysisSymbol:'AGED',currency:'EUR',purchasePrice:9.52},
+    {id:'trilogy',name:'Trilogy Metals',isin:'CA89621C1059',wkn:'A14XMF',qty:600,broker:'Trade Republic',brokerDisplaySource:'Lang & Schwarz',analysisVenue:'Manuell',fallbackVenues:['Manuell'],dataSource:'TRILOGY_YAHOO',analysisSymbol:'TMQ',currency:'EUR',purchasePrice:null},
+    SPACEX,
+    ETHEREUM
+  ]);
+
+  function isEthereum(x) {
+    return String(x?.id || '').trim().toLowerCase() === 'ethereum' ||
+      String(x?.name || '').trim().toLowerCase() === 'ethereum';
+  }
+
+  function seedOrRepairRequiredPortfolio() {
+    const raw = localStorage.getItem(STORE);
+    const existing = parse(raw);
+
+    // Fresh Vercel/deployment host: seed the complete 14-position canonical baseline BEFORE app.js loads.
+    if (!existing) {
+      const fresh = {
+        schemaVersion:3,
+        savedAt:new Date().toISOString(),
+        positions:FRESH_CANONICAL_POSITIONS.map(clone),
+        archive:[],
+        transactions:[],
+        settings:{},
+        initializedBy:'5.11.2-fresh-canonical-14'
+      };
+      nativeSetItem.call(localStorage, STORE, JSON.stringify(fresh));
+      return {changed:true, mode:'fresh-seed', count:fresh.positions.length};
+    }
+
+    // Existing store: never replace user holdings. Only restore the two confirmed special positions
+    // when they are neither active nor intentionally archived.
+    const archived = existing.archive || [];
+    let changed = false;
+    if (!(existing.positions || []).some(isSpaceX) && !archived.some(isSpaceX)) {
+      existing.positions.push(clone(SPACEX));
+      changed = true;
+    }
+    if (!(existing.positions || []).some(isEthereum) && !archived.some(isEthereum)) {
+      existing.positions.push(clone(ETHEREUM));
+      changed = true;
+    }
+    if (changed) {
+      existing.savedAt = new Date().toISOString();
+      existing.repairedBy = '5.11.2-required-positions';
+      nativeSetItem.call(localStorage, STORE, JSON.stringify(existing));
+    }
+    return {changed, mode:'existing-merge', count:(existing.positions || []).length};
+  }
 
   const clone = x => JSON.parse(JSON.stringify(x));
   function parse(raw) {
@@ -161,7 +247,7 @@
       if(JSON.stringify(p[k])!==JSON.stringify(v)){p[k]=v;changed=true;changes.push(k);}
     }
     if(changed){
-      writeBackup(raw,'pre-5.11.1-spacex-normalize');
+      writeBackup(raw,'pre-5.11.2-spacex-normalize');
       snap.savedAt=new Date().toISOString();
       snap.normalized5101={at:snap.savedAt, isin:SPACEX.isin, changes:[...new Set(changes)]};
       nativeSetItem.call(localStorage, STORE, JSON.stringify(snap));
@@ -169,6 +255,7 @@
     return {changed,qty:Number(p.qty),changes:[...new Set(changes)]};
   }
 
+  const portfolioResult = seedOrRepairRequiredPortfolio();
   recoverFromBackupIfRicher();
   const spaceXResult = normalizeSpaceX();
 
@@ -184,6 +271,6 @@
     return nativeSetItem.call(this,key,value);
   };
 
-  window.__DC_PRELOAD__={version:VERSION,store:STORE,backup:BACKUP,history:HISTORY,spaceX:spaceXResult};
-  console.info('Depot-Cockpit 5.11.1 clean preload active', window.__DC_PRELOAD__);
+  window.__DC_PRELOAD__={version:VERSION,store:STORE,backup:BACKUP,history:HISTORY,portfolio:portfolioResult,spaceX:spaceXResult};
+  console.info('Depot-Cockpit 5.11.2 clean preload active', window.__DC_PRELOAD__);
 })();
