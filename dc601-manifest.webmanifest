@@ -1,0 +1,9 @@
+{
+  "name": "Depot-Cockpit Professional 6.0.24",
+  "short_name": "Depot 6",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#edf3f9",
+  "theme_color": "#edf3f9",
+  "lang": "de"
+}

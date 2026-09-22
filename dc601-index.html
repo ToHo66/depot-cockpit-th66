@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#eef3f8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="/dc601-manifest.webmanifest">
+<link rel="stylesheet" href="/dc601-styles.css?v=601m1">
+<title>Depot-Cockpit 6.0.1</title>
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <div class="eyebrow">DEPOT-COCKPIT · VERSION 6.0.24-mobile24</div>
+    <h1 id="pageTitle">Übersicht</h1>
+    <div class="build">MOVERS FILTER · LAM ROUTING</div>
+  </div>
+  <button id="refresh" class="refresh" aria-label="Kurse aktualisieren">↻</button>
+</header>
+
+<main>
+<section id="page-overview" class="page active">
+  <div class="broker-tabs">
+    <button class="broker-tab active" data-broker="all">Gesamt</button>
+    <button class="broker-tab" data-broker="sBroker">S Broker</button>
+    <button class="broker-tab" data-broker="Trade Republic">Trade Republic</button>
+  </div>
+
+  <article class="hero">
+    <div class="heroTop"><span id="heroLabel">Gesamtdepotwert</span><span id="updated">Noch kein Kursabruf</span></div>
+    <div id="total" class="total">–</div>
+    <div class="heroRow"><span id="coverage" class="pill warn">0/14 bewertet</span><span id="message" class="micro">Bereit</span></div>
+  </article>
+
+  <div class="quick-grid">
+    <button class="quick-card" data-go="positions"><span>Positionen</span><strong id="positionCount">14</strong><small>kompakt ansehen ›</small></button>
+    <button class="quick-card" data-go="analysis"><span>Datenqualität</span><strong id="quality">–</strong><small>Analyse öffnen ›</small></button>
+    <button class="quick-card" data-go="transaction"><span>Transaktionen</span><strong id="txCount">0</strong><small>Kauf / Verkauf ›</small></button>
+    <button class="quick-card" data-go="more"><span>System</span><strong id="apiState">–</strong><small>Diagnose ›</small></button>
+  </div>
+
+  <details class="fold" open>
+    <summary><div><b>Broker-Aufteilung</b><small>Werte nur bei Bedarf anzeigen</small></div><span>›</span></summary>
+    <div class="fold-body broker-grid">
+      <article><span>S Broker</span><strong id="sbValue">–</strong><small id="sbCount">11 Positionen</small></article>
+      <article><span>Trade Republic</span><strong id="trValue">–</strong><small id="trCount">3 Positionen</small></article>
+    </div>
+  </details>
+
+  <section class="daily-movers">
+    <div class="daily-movers-head"><div><div class="kicker">TAGESBEWEGUNG</div><h3>Gewinner & Verlierer</h3></div><button class="icon-refresh" id="reloadMovers" aria-label="Tagesbewegungen aktualisieren">↻</button></div>
+    <div class="mover-tabs"><button class="mover-tab active" data-mode="winners">Gewinner</button><button class="mover-tab" data-mode="losers">Verlierer</button></div>
+    <div id="dailyMoversList"><div class="mover-empty">Tagesbewegungen werden geladen …</div></div>
+  </section>
+
+  <details class="fold" open>
+    <summary><div><b>Positionen – Kurzüberblick</b><small>Tippen zum Aufklappen</small></div><span>›</span></summary>
+    <div id="overviewPositions" class="compact-list"></div>
+  </details>
+</section>
+
+<section id="page-positions" class="page">
+  <div class="section-head compact-head">
+    <div><div class="kicker" id="positionsKicker">BESTÄNDE</div></div>
+    <div class="chip-row">
+      <button class="chip active" data-type="all">Alle</button>
+      <button class="chip" data-type="ETF">ETF</button>
+      <button class="chip" data-type="Aktie">Aktien</button>
+      <button class="chip" data-type="Krypto">Krypto</button>
+    </div>
+  </div>
+  <div id="positionList"></div>
+</section>
+
+<section id="page-transaction" class="page">
+  <div class="section-head"><div><div class="kicker">BUCHUNG</div><h2>Transaktionen</h2><p>Kauf, Nachkauf oder Verkauf. Neue Wertpapiere können direkt hier angelegt werden.</p></div></div>
+  <article class="panel">
+    <div class="segmented"><button class="active" data-tx-kind="BUY">Kauf</button><button data-tx-kind="SELL">Verkauf</button></div>
+    <label>Position<select id="txPosition"></select></label>
+    <button id="addNewPositionBtn" type="button" class="add-position-btn">＋ Neues Wertpapier hinzufügen</button>
+    <div id="txNewPositionBox" class="new-position-box" hidden>
+      <div class="kicker">NEUE POSITION</div>
+      <label>Name <small class="field-note">wird bei bekannter ISIN automatisch ausgefüllt</small><input id="txNewName" placeholder="automatisch oder manuell"></label>
+      <div class="form-grid">
+        <label>ISIN <b class="required-mark">zuerst eingeben</b><input id="txNewIsin" autocapitalize="characters" placeholder="IE00…"></label>
+        <label>WKN<input id="txNewWkn" autocapitalize="characters" placeholder="optional"></label>
+        <label>Broker<select id="txNewBroker"><option value="sBroker">S Broker</option><option value="Trade Republic">Trade Republic</option></select></label>
+        <label>Typ<select id="txNewType"><option>ETF</option><option>Aktie</option><option>Rohstoff</option><option>Krypto</option></select></label>
+        <label>Xetra-Ticker<input id="txNewSymbol" autocapitalize="characters" placeholder="optional"></label>
+      </div>
+      <small id="txNewHint">ISIN eingeben. Bekannte Instrumente werden automatisch ergänzt.</small>
+    </div>
+    <div class="form-grid">
+      <label>Stückzahl<input id="txQty" inputmode="decimal" placeholder="0,00"></label>
+      <label>Kurs (€)<input id="txPrice" inputmode="decimal" placeholder="0,00"></label>
+      <label>Gebühren (€)<input id="txFees" inputmode="decimal" value="0"></label>
+      <label>Ausmachender Betrag (€)<input id="txAmount" inputmode="decimal" placeholder="optional · laut Broker"></label>
+      <label>Handelsplatz<input id="txVenue" placeholder="z. B. Tradegate BSX"></label>
+      <label>Datum<input id="txDate" type="date"></label>
+    </div>
+    <button id="saveTx" class="primary">Transaktion speichern</button>
+  </article>
+  <details class="fold" open>
+    <summary><div><b>Historie</b><small id="historyHint">Noch keine Transaktionen</small></div><span>›</span></summary>
+    <div id="txHistory" class="fold-body"></div>
+  </details>
+</section>
+
+<section id="page-analysis" class="page">
+  <div class="section-head compact-head"><div><div class="kicker">AUSWERTUNG · KERNSIGNALE</div><p>Details aufklappbar.</p></div></div>
+  <div class="analysis-scopebar">
+    <button class="analysis-scope active" data-scope="all">Gesamt</button>
+    <button class="analysis-scope" data-scope="sBroker">S Broker</button>
+    <button class="analysis-scope" data-scope="Trade Republic">Trade Republic</button>
+  </div>
+  <div class="analysis-context"><span>Analysebereich</span><strong id="analysisScopeLabel">Gesamtdepot</strong></div>
+  <section class="analysis-dashboard">
+    <div id="dayPerformance" class="analysis-performance"><small>Heute</small><strong>–</strong><span>–</span></div>
+    <div id="buyPerformance" class="analysis-performance"><small>Seit Kauf</small><strong>–</strong><span>–</span></div>
+  </section>
+
+  <div id="referenceAudit" class="reference-audit"></div>
+  <div class="data-integrity-note"><b>Datenintegrität:</b> Tagesperformance und technische Historie werden nur aus der kanonischen Instrumentenidentität berechnet. Fehlende Referenzen werden nicht geschätzt.</div>
+  <section class="technical-workbench"><div class="workbench-head"><div><div class="kicker">TECHNISCHER 5ER-CHECK</div><h3>Analysearbeitsplatz</h3></div><button id="reloadTechnical" class="icon-refresh">↻</button></div><label class="asset-select-label">Wertpapier<select id="technicalAsset"></select></label><div class="range-row"><button class="range-btn" data-range="1W">1W</button><button class="range-btn" data-range="1M">1M</button><button class="range-btn" data-range="3M">3M</button><button class="range-btn" data-range="6M">6M</button><button class="range-btn active" data-range="1Y">1J</button></div><div id="technicalStatus" class="technical-status"><span class="tech-dot grey"></span><b>Noch nicht analysiert</b></div><div class="chart-card"><div class="chart-toggles"><label class="legend-close"><input id="toggleClose" type="checkbox" checked><span></span>Kurs</label><label class="legend-30"><input id="toggle30" type="checkbox" checked><span></span>30T</label><label class="legend-50"><input id="toggle50" type="checkbox" checked><span></span>50T</label><label class="legend-200"><input id="toggle200" type="checkbox" checked><span></span>200T</label></div><div id="technicalChart" class="technical-chart"><div class="chart-empty">Wertpapier auswählen.</div></div><div class="chart-axis-caption">Zeitachse · Monats- oder Tagesmarken je Zeitraum</div><div id="chartDateStrip" class="chart-date-strip"><span><b>Start</b>–</span><span><b>Mitte</b>–</span><span><b>Aktuell</b>–</span></div></div><div id="technicalMetrics" class="technical-metrics"></div><div id="technicalConclusion" class="technical-conclusion">Noch keine technische Aussage.</div><p id="technicalNote" class="technical-note"></p></section>
+  <details class="fold" open>
+    <summary><div><b>Positionsanalyse</b><small>Heute · seit Kauf · Einstand</small></div><span>›</span></summary>
+    <div id="positionAnalysis" class="fold-body analysis-list"></div>
+  </details>
+
+  <details class="fold">
+    <summary><div><b>Depot-Kennzahlen</b><small>Struktur und Abdeckung</small></div><span>›</span></summary>
+    <div class="fold-body">
+      <div class="metric-line"><span>Bewertete Positionen</span><strong id="analysisCoverage">–</strong></div>
+      <div class="metric-line"><span>Größte Position</span><strong id="largestPosition">–</strong></div>
+      <div class="metric-line"><span>Trade-Republic-Anteil</span><strong id="trShare">–</strong></div>
+    </div>
+  </details>
+  <details class="fold" open>
+    <summary><div><b>Datenquellen</b><small>Welche Route liefert welchen Kurs?</small></div><span>›</span></summary>
+    <div id="sourceAnalysis" class="fold-body source-list"></div>
+  </details>
+  <details class="fold">
+    <summary><div><b>Kursprobleme</b><small>Nur Positionen ohne neuen Kurs</small></div><span>›</span></summary>
+    <div id="missingAnalysis" class="fold-body"></div>
+  </details>
+  <article class="trend-watch panel">
+    <div class="kicker">TREND-WÄCHTER</div>
+    <h3>Technischer Status der Auswahl</h3>
+    <div id="trendWatchSummary" class="trend-watch-summary">
+      <strong>Noch keine Auswahl analysiert</strong>
+      <span>Wähle oben ein Wertpapier für den technischen 5er-Check.</span>
+    </div>
+  </article>
+</section>
+
+<section id="page-more" class="page">
+  <div class="section-head compact-head"><div><div class="kicker">SYSTEM · DEPOT-MASTER</div></div></div>
+  <details class="fold" open>
+    <summary><div><b>Depot-Master</b><small>Kanonischer Bestand</small></div><span>›</span></summary>
+    <div class="fold-body">
+      <div class="metric-line"><span>Gesamt</span><strong id="masterTotalCount">–</strong></div>
+      <div class="metric-line"><span>S Broker</span><strong id="masterSbCount">–</strong></div>
+      <div class="metric-line"><span>Trade Republic</span><strong id="masterTrCount">–</strong></div>
+      <div class="metric-line"><span>SpaceX</span><strong>20,437 Stück</strong></div>
+      <div class="metric-line"><span>Ethereum</span><strong>3,363942 ETH</strong></div>
+    </div>
+  </details>
+  <details class="fold">
+    <summary><div><b>Systemdiagnose</b><small>API, Speicher, letzter Abruf</small></div><span>›</span></summary>
+    <div class="fold-body">
+      <div class="diagnostic-line"><span>Ethereum-Quelle</span><strong>Kraken primär · Coinbase Fallback</strong></div>
+      <div class="diagnostic-line"><span>Ethereum-Status</span><strong id="ethDiag">–</strong></div>
+      <button id="runDiag" class="secondary">Diagnose ausführen</button>
+      <pre id="diagOutput">Noch nicht ausgeführt.</pre>
+    </div>
+  </details>
+  <details class="fold">
+    <summary><div><b>Lokale Daten</b><small>Transaktionen und letzter gültiger Snapshot</small></div><span>›</span></summary>
+    <div class="fold-body">
+      <button id="exportBtn" class="secondary">Datenexport vorbereiten</button>
+      <textarea id="exportBox" readonly placeholder="Export erscheint hier."></textarea>
+    </div>
+  </details>
+</section>
+</main>
+
+<nav class="bottom-nav" aria-label="Hauptnavigation">
+  <button class="nav-btn active" data-page="overview"><span>⌂</span><small>Übersicht</small></button>
+  <button class="nav-btn" data-page="positions"><span>◫</span><small>Positionen</small></button>
+  <button class="nav-btn" data-page="transaction"><span>↕</span><small>Transaktion</small></button>
+  <button class="nav-btn" data-page="analysis"><span>▥</span><small>Analyse</small></button>
+  <button class="nav-btn" data-page="more"><span>•••</span><small>Mehr</small></button>
+</nav>
+
+<div id="toast" class="toast"></div>
+<script src="/dc601-app.js?v=601m1"></script>
+</body>
+</html>

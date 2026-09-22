@@ -1,31 +1,59 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "outputDirectory": ".",
-  "headers": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "same-origin"
-        }
-      ]
+      "src": "dc601-market-data.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "dc601-health.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "dc601-index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "dc601-app.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "dc601-styles.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "dc601-manifest.webmanifest",
+      "use": "@vercel/static"
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/",
-      "destination": "/index.html"
+      "src": "/api/market-data",
+      "dest": "/dc601-market-data.js"
+    },
+    {
+      "src": "/api/health",
+      "dest": "/dc601-health.js"
+    },
+    {
+      "src": "/api/analysis",
+      "dest": "/dc601-health.js"
+    },
+    {
+      "src": "/dc601-app.js",
+      "dest": "/dc601-app.js"
+    },
+    {
+      "src": "/dc601-styles.css",
+      "dest": "/dc601-styles.css"
+    },
+    {
+      "src": "/dc601-manifest.webmanifest",
+      "dest": "/dc601-manifest.webmanifest"
+    },
+    {
+      "src": "/",
+      "dest": "/dc601-index.html"
     }
   ]
 }
